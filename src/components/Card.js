@@ -10,7 +10,7 @@ const Card = ({ title, description, buttonText, colorObject, navigateTo }) => {
       </div>
       <div>
         <p className={`${colorObject.title} text-[1rem]`}>{description}</p>
-        <div className='mt-[5vh]'>
+        <div className='mt-[3vh]'>
           <button onClick={() => navigate(navigateTo)} className={`text-white ${colorObject.buttonColor} px-[1.25rem] py-[0.75rem] rounded-md clickEffect`}>
             {buttonText} 
           </button>

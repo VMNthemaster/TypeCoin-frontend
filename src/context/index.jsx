@@ -25,9 +25,16 @@ export const StateContextProvider = ({children}) => {
         try {
             const data = await contract.call('getSentence', _bool, _arr);
             console.log("success",data)
-            return data;
+            return {
+                success: true,
+                data,
+            }
         } catch (error) {
             console.log("failed",error)
+            return {
+                success: false,
+                error,
+            }
         }
     }
 

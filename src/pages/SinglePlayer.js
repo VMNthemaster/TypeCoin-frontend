@@ -2,14 +2,16 @@ import React from 'react'
 import { useEffect } from 'react'
 import useState from 'react-usestateref'
 import {FaCarSide} from 'react-icons/fa'
-import {useStateContext} from '../context'
 import Loading from '../components/Loading'
+import {useStateContext} from '../context'
+import { checkEndingOfSentence } from '../utils'
 
 const SinglePlayer = () => {
     const {getSentences} = useStateContext()
-    const [counter, setCounter] = useState(3)
-    const [sentencesArray, setSentencesArray] = useState([])
+    const [counter, setCounter] = useState(4)
+    const [sentencesArray, setSentencesArray, getSentencesArray] = useState([])
     const [isLoading, setIsLoading] = useState(true)
+    const [currentNumSentence, setCurrentNumSentence] = useState(0%3)
 
     const handleCounter = () => {
         setTimeout(() => {
@@ -19,17 +21,17 @@ const SinglePlayer = () => {
         }, 1000);
     }
 
-    // useEffect(() => {
-    //     if(!isLoading){
-    //         handleCounter()
-    //     }
-    
-    // // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, [counter, isLoading])
-
     const getSentencesFromSmartContract = async () => {
-        const data = await getSentences(true, [0,1,2])
-        setSentencesArray(data)
+        const data = await getSentences(true, [0,1,3])
+        if(data.success){
+            const parsedData = checkEndingOfSentence(data.data)
+            setSentencesArray(parsedData)
+            console.log(getSentencesArray.current)
+            setIsLoading(false)
+        }
+        else{
+            getSentencesFromSmartContract()
+        }
         // true since bool is isSinglePlayer.
         // temporarily array is hardcoded we will get random numbers later.
     }
@@ -40,14 +42,24 @@ const SinglePlayer = () => {
     }, [])
 
     useEffect(() => {
-      if(sentencesArray){
-        setIsLoading(false)
-      }
+        if(getSentencesArray.length > 0){
+            console.log("len>0")
+            setIsLoading(false)
+        }
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sentencesArray])
+
+    useEffect(() => {
       if(!isLoading){
         handleCounter()
       }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [sentencesArray])
+    }, [counter, isLoading])
+    
+    
+
+    
     
     
     
@@ -68,7 +80,7 @@ const SinglePlayer = () => {
                 </div>
                 <h2>0 wpm</h2>
             </div>
-                {sentencesArray && <h2>{sentencesArray[0]}</h2>}
+                {sentencesArray && <h2>{sentencesArray[currentNumSentence].sentence}</h2>}
         </div>}
     </div>
   )
