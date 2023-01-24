@@ -38,3 +38,13 @@ const countNumOfWords = (sentence, parsedData, i) => {
     count,
    }
 }
+
+export const getRandomNumbers = (min, max, numOfNumbers) => {
+  let numArray = []
+  for(let i = 0; i < numOfNumbers; i++){
+    let tempNum = Math.floor(Math.random() * (max - min)) + min;
+    numArray.push(tempNum)
+  }
+
+  return numArray;
+}

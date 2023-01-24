@@ -1,87 +1,121 @@
-import React from 'react'
-import { useEffect } from 'react'
+import React, {useRef, useEffect} from 'react'
 import useState from 'react-usestateref'
-import {FaCarSide} from 'react-icons/fa'
+import { useLocation } from 'react-router-dom'
+import { FaCarSide } from 'react-icons/fa'
 import Loading from '../components/Loading'
-import {useStateContext} from '../context'
-import { checkEndingOfSentence } from '../utils'
+import { useStateContext } from '../context'
+import { checkEndingOfSentence, getRandomNumbers } from '../utils'
 
 const SinglePlayer = () => {
-    const {getSentences} = useStateContext()
-    const [counter, setCounter] = useState(4)
-    const [sentencesArray, setSentencesArray, getSentencesArray] = useState([])
-    const [isLoading, setIsLoading] = useState(true)
-    const [currentNumSentence, setCurrentNumSentence] = useState(0%3)
+  const {state} = useLocation()
+  const { getSentences } = useStateContext()
+  const [counter, setCounter] = useState(4)
+  const [sentencesArray, setSentencesArray, getSentencesArray] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [currentSentence, setCurrentSentence] = useState('')
+  const [currentNumSentence, setCurrentNumSentence] = useState(0 % 3)
+  const [inputText, setInputText] = useState('')
+  const [typedText, setTypedText] = useState('')
+  const [currentKeyPressed, setCurrentKeyPressed] = useState('') 
+  console.log(currentKeyPressed)
 
-    const handleCounter = () => {
-        setTimeout(() => {
-            if(counter >= 0){
-                setCounter(counter - 1)
-            }
-        }, 1000);
-    }
+  const timeStamps = useRef({
+    startTime: '',
+    currentTime: '',
+    endTime: ''
+  })
 
-    const getSentencesFromSmartContract = async () => {
-        const data = await getSentences(true, [0,1,3])
-        if(data.success){
-            const parsedData = checkEndingOfSentence(data.data)
-            setSentencesArray(parsedData)
-            console.log(getSentencesArray.current)
-            setIsLoading(false)
-        }
-        else{
-            getSentencesFromSmartContract()
-        }
-        // true since bool is isSinglePlayer.
-        // temporarily array is hardcoded we will get random numbers later.
-    }
+  const handleChange = (e) => {
+    if(counter > 0) return;
 
-    useEffect(() => {
-      getSentencesFromSmartContract()   
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    setInputText(e.target.value)
+    setTypedText(prevText => prevText + currentKeyPressed)
+    setCurrentSentence(prevText => prevText.slice(1))
+    // this is correct but we have to modify it for wrong typed word also
+  }
 
-    useEffect(() => {
-        if(getSentencesArray.length > 0){
-            console.log("len>0")
-            setIsLoading(false)
-        }
-    
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [sentencesArray])
-
-    useEffect(() => {
-      if(!isLoading){
-        handleCounter()
+  const handleCounter = () => {
+    setTimeout(() => {
+      if (counter >= 0) {
+        setCounter(counter - 1)
       }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [counter, isLoading])
-    
-    
+    }, 1000)
+  }
 
-    
-    
-    
-    
-    
+  const getSentencesFromSmartContract = async () => {
+    const numArray = getRandomNumbers(1, state.numOfSentences, 3)
+    console.log(numArray)
+
+    const data = await getSentences(true, [3, 1, 2])
+    if (data.success) {
+      const parsedData = checkEndingOfSentence(data.data)
+      setSentencesArray(parsedData)
+      setCurrentSentence(parsedData[currentNumSentence].sentence)
+      setIsLoading(false)
+    } else {
+      getSentencesFromSmartContract()
+    }
+    // true since bool is isSinglePlayer.
+    // temporarily array is hardcoded we will get random numbers later.
+  }
+
+  useEffect(() => {
+    getSentencesFromSmartContract()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (getSentencesArray.length > 0) {
+      console.log('len>0')
+      setIsLoading(false)
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sentencesArray])
+
+  useEffect(() => {
+    if (!isLoading) {
+      handleCounter()
+    }
+    if(counter === 0){
+      timeStamps.current.startTime = new Date().getTime()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [counter, isLoading])
+
   return (
-    <div className='h-[90vh] bg-gray-200 w-full flex justify-center items-center'>
-        {isLoading && <Loading /> }
-        {!isLoading && <div className="card h-fit w-[40%] p-4 border-2 bg-white shadow-md rounded-md"> 
-            <div className="flex justify-between">
-                <h2 className='text-blue-500 text-lg font-semibold'>{counter > 0 ? 'The race is about to start...': 'The race has started!'}</h2>
-                {counter >= 0 && <h2 className='text-lg font-semibold'>: 0{counter}</h2>}
+    <div className="h-[90vh] bg-gray-200 w-full flex justify-center items-center">
+      {isLoading && <Loading />}
+      {!isLoading && (
+        <div className="card h-fit w-[40%] p-4 border-2 bg-white shadow-md rounded-md">
+          <div className="flex justify-between">
+            <h2 className="text-blue-500 text-lg font-semibold">
+              {counter > 0
+                ? 'The race is about to start...'
+                : 'The race has started!'}
+            </h2>
+            {counter >= 0 && (
+              <h2 className="text-lg font-semibold">: 0{counter}</h2>
+            )}
+          </div>
+          <div className="flex justify-between mt-2 items-center">
+            {/* here the dynamic car picture and wpm will come(wpm will be in the corner) */}
+            <div className={`w-[80%] grid grid-rows-1 grid-cols-${sentencesArray[currentNumSentence].count < 12 ? sentencesArray[currentNumSentence].count : '12'}`}>
+                {/* col start number and col end number will be dynamically changed */}
+              <FaCarSide className={`col-start-7 col-end-8 justify-self-center`} size={42} color="purple" />
             </div>
-            <div className="flex justify-between mt-2 items-center">
-                {/* here the dynamic car picture and wpm will come(wpm will be in the corner) */}
-                <div className='w-[80%] flex flex-col'>
-                    <FaCarSide size={42} color="purple" />
-                    <hr className='border-2 border-dashed border-red-400' />
-                </div>
-                <h2>0 wpm</h2>
-            </div>
-                {sentencesArray && <h2>{sentencesArray[currentNumSentence].sentence}</h2>}
-        </div>}
+            <h2>0 wpm</h2>
+          </div>
+          <hr className="w-[80%] border-2 border-dashed border-red-400" />
+
+          <div className='w-full p-4 mt-4 border-2 border-blue-300 bg-blue-100 flex flex-col gap-y-4 rounded-md'>
+          {sentencesArray && (
+            <div className='text-xl tracking-wide'><span className='text-green-500 text-xl tracking-wide'>{typedText}</span>{currentSentence}</div>
+          )}
+          <input onKeyDown={(e) => setCurrentKeyPressed(e.key) } placeholder={`${counter<=0 ? '' : 'Start typing when the race begins....'}`} onChange={handleChange} name="inputText" value={inputText} type="text" autoFocus className='w-full outline-none  rounded-md h-[5vh] p-2 text-lg' />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

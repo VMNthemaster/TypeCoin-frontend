@@ -5,7 +5,7 @@ import {ethers} from 'ethers'
 const StateContext = createContext()
 
 export const StateContextProvider = ({children}) => {
-    const {contract} = useContract('0x59b6eB216eB6E251C05DD9883a71Db17b0E726Fa')    // contract address
+    const {contract} = useContract('0x7A968eBD2D60C55914292D6CCE37b2EB8c20315f')    // contract address
 
     const address = useAddress()    // gives the address of the connected wallet
     const connect = useMetamask()
@@ -18,19 +18,18 @@ export const StateContextProvider = ({children}) => {
             return data;
         } catch (error) {
             console.log("failed",error)
+            return error;
         }
     }
 
     const getSentences = async (_bool, _arr) => {
         try {
             const data = await contract.call('getSentence', _bool, _arr);
-            console.log("success",data)
             return {
                 success: true,
                 data,
             }
         } catch (error) {
-            console.log("failed",error)
             return {
                 success: false,
                 error,
@@ -38,6 +37,20 @@ export const StateContextProvider = ({children}) => {
         }
     }
 
+    const getTotalNumberOfSentences = async () => {
+        try {
+            const num = await contract.call('getNumberOfSentences')
+            return {
+                success: true,
+                num,
+            }
+        } catch (error) {
+            return {
+                success: false,
+                error,
+            }
+        }
+    }
 
     return (
         <StateContext.Provider value={{
@@ -46,6 +59,7 @@ export const StateContextProvider = ({children}) => {
             connect,
             sendParticipationAmount,
             getSentences,
+            getTotalNumberOfSentences,
         }}>
             {children}
         </StateContext.Provider>
