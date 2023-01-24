@@ -14,24 +14,58 @@ const SinglePlayer = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [currentSentence, setCurrentSentence] = useState('')
   const [currentNumSentence, setCurrentNumSentence] = useState(0 % 3)
-  const [inputText, setInputText] = useState('')
-  const [typedText, setTypedText] = useState('')
+  const [inputText, setInputText, getInputText] = useState('')
+  const [typedText, setTypedText, getTypedText] = useState('')
+  const [incorrectTypedText, setIncorrectTypedText] = useState('')
   const [currentKeyPressed, setCurrentKeyPressed] = useState('') 
   console.log(currentKeyPressed)
+  const ignoreKeyStrokes = ['Shift', 'Alt', 'Tab', 'Escape', 'CapsLock', 'Control', 'Meta', 'ContextMenu', 'Enter', 'F1', 'F2', 'F3','F4','F5','F6','F7','F8','F9','F10','F11','F12', 'Insert', 'End', 'PageUp', 'PageDown', 'Home', 'Delete', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
 
   const timeStamps = useRef({
     startTime: '',
     currentTime: '',
-    endTime: ''
+    endTime: '',
+    currentWordCount: 0,
   })
+
+  const handleInput = (e) => {
+    if(ignoreKeyStrokes.includes(currentKeyPressed)) return;
+
+    if(currentKeyPressed === 'Backspace'){
+      if(incorrectTypedText.length > 0){
+        setIncorrectTypedText(prevText => prevText.substring(0,incorrectTypedText.length-1))
+      }
+      else{
+        setCurrentSentence(prevText => typedText.charAt(typedText.length - 1) + prevText)
+        setTypedText(prevText => prevText.substring(0, prevText.length-1))  // removes last character from the string
+      }
+
+      return;
+    }
+
+    // checks if the key pressed is correct or not
+    if(currentKeyPressed === currentSentence[0]){
+      setTypedText(prevText => prevText + currentKeyPressed)
+      setCurrentSentence(prevText => prevText.slice(1))
+    }
+    else{
+      // only add it to the incorrect string if already typed incorrect list length is less than 5
+      if(incorrectTypedText.length > 5){
+        setInputText(prevText => prevText.substring(0, prevText.length-1) )
+      }
+      else{
+        setIncorrectTypedText(prevText => prevText + currentKeyPressed)
+      }
+    }
+
+  }
 
   const handleChange = (e) => {
     if(counter > 0) return;
 
     setInputText(e.target.value)
-    setTypedText(prevText => prevText + currentKeyPressed)
-    setCurrentSentence(prevText => prevText.slice(1))
-    // this is correct but we have to modify it for wrong typed word also
+
+    handleInput(e)
   }
 
   const handleCounter = () => {
@@ -112,7 +146,7 @@ const SinglePlayer = () => {
           {sentencesArray && (
             <div className='text-xl tracking-wide'><span className='text-green-500 text-xl tracking-wide'>{typedText}</span>{currentSentence}</div>
           )}
-          <input onKeyDown={(e) => setCurrentKeyPressed(e.key) } placeholder={`${counter<=0 ? '' : 'Start typing when the race begins....'}`} onChange={handleChange} name="inputText" value={inputText} type="text" autoFocus className='w-full outline-none  rounded-md h-[5vh] p-2 text-lg' />
+          <input autoComplete='off' onKeyDown={(e) => setCurrentKeyPressed(e.key) } placeholder={`${counter<=0 ? '' : 'Start typing when the race begins....'}`} onChange={handleChange} name="inputText" value={inputText} type="text" autoFocus className='w-full outline-none  rounded-md h-[5vh] p-2 text-lg' />
           </div>
         </div>
       )}
