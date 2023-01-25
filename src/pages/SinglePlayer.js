@@ -18,7 +18,6 @@ const SinglePlayer = () => {
   const [typedText, setTypedText, getTypedText] = useState('')
   const [incorrectTypedText, setIncorrectTypedText] = useState('')
   const [currentKeyPressed, setCurrentKeyPressed] = useState('') 
-  console.log(currentKeyPressed)
   const ignoreKeyStrokes = ['Shift', 'Alt', 'Tab', 'Escape', 'CapsLock', 'Control', 'Meta', 'ContextMenu', 'Enter', 'F1', 'F2', 'F3','F4','F5','F6','F7','F8','F9','F10','F11','F12', 'Insert', 'End', 'PageUp', 'PageDown', 'Home', 'Delete', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
 
   const timeStamps = useRef({
@@ -27,6 +26,7 @@ const SinglePlayer = () => {
     endTime: '',
     currentWordCount: 0,
   })
+  console.log(timeStamps)
 
   const handleInput = (e) => {
     if(ignoreKeyStrokes.includes(currentKeyPressed)) return;
@@ -58,12 +58,37 @@ const SinglePlayer = () => {
       }
     }
 
+    // handling last word
+    // useref no storing the latest value
+    // try chaging useref to usestate
+    console.log(timeStamps.current.currentWordCount)
+    console.log(inputText)
+    if(timeStamps.current.currentWordCount === sentencesArray[currentNumSentence].count - 1 && inputText === sentencesArray[currentNumSentence].lastWord){
+      timeStamps.current.currentWordCount += 1
+        timeStamps.current.currentTime = new Date().getTime()
+        timeStamps.current.endTime = timeStamps.current.currentTime
+        setInputText('')
+    }
+
   }
 
   const handleChange = (e) => {
     if(counter > 0) return;
+    if(timeStamps.current.currentWordCount === sentencesArray[currentNumSentence].count) return;
 
-    setInputText(e.target.value)
+    if(currentKeyPressed === ' '){  // if space clicked clear input field for correct typing
+      if(incorrectTypedText.length === 0){
+        timeStamps.current.currentWordCount += 1
+        timeStamps.current.currentTime = new Date().getTime()
+        setInputText('')
+      }
+      else{
+      setInputText(e.target.value)
+      }
+    }
+    else{
+      setInputText(e.target.value)
+    }
 
     handleInput(e)
   }
@@ -78,19 +103,17 @@ const SinglePlayer = () => {
 
   const getSentencesFromSmartContract = async () => {
     const numArray = getRandomNumbers(1, state.numOfSentences, 3)
-    console.log(numArray)
 
-    const data = await getSentences(true, [3, 1, 2])
+    const data = await getSentences(true, [0, 1, 2])
     if (data.success) {
       const parsedData = checkEndingOfSentence(data.data)
       setSentencesArray(parsedData)
+      // console.log(getSentencesArray.current)
       setCurrentSentence(parsedData[currentNumSentence].sentence)
       setIsLoading(false)
     } else {
       getSentencesFromSmartContract()
     }
-    // true since bool is isSinglePlayer.
-    // temporarily array is hardcoded we will get random numbers later.
   }
 
   useEffect(() => {
@@ -100,7 +123,6 @@ const SinglePlayer = () => {
 
   useEffect(() => {
     if (getSentencesArray.length > 0) {
-      console.log('len>0')
       setIsLoading(false)
     }
 
@@ -144,7 +166,7 @@ const SinglePlayer = () => {
 
           <div className='w-full p-4 mt-4 border-2 border-blue-300 bg-blue-100 flex flex-col gap-y-4 rounded-md'>
           {sentencesArray && (
-            <div className='text-xl tracking-wide'><span className='text-green-500 text-xl tracking-wide'>{typedText}</span>{currentSentence}</div>
+            <div className={`text-xl tracking-wide ${incorrectTypedText.length > 0 ? 'text-red-400': ''}`} ><span className='text-green-500 text-xl tracking-wide'>{typedText}</span>{currentSentence}</div>
           )}
           <input autoComplete='off' onKeyDown={(e) => setCurrentKeyPressed(e.key) } placeholder={`${counter<=0 ? '' : 'Start typing when the race begins....'}`} onChange={handleChange} name="inputText" value={inputText} type="text" autoFocus className='w-full outline-none  rounded-md h-[5vh] p-2 text-lg' />
           </div>

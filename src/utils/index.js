@@ -32,10 +32,13 @@ const countNumOfWords = (sentence, parsedData, i) => {
   const count = sentence.split(' ').filter(function(num) {
     return num !== ''
    }).length;
+
+   const lastWord = sentence.split(' ').pop()
    
    parsedData[i] = {
     sentence,
     count,
+    lastWord,
    }
 }
 
