@@ -6,6 +6,7 @@ import Loading from '../components/Loading'
 import { useStateContext } from '../context'
 import { checkEndingOfSentence, getRandomNumbers, checkIgnoredKey } from '../utils'
 import SinglePlayerResult from '../components/SinglePlayerResult'
+import '../index.css'
 
 const SinglePlayer = () => {
   const { state } = useLocation()
@@ -22,14 +23,14 @@ const SinglePlayer = () => {
   const [incorrectTypedText, setIncorrectTypedText, getIncorrectTypedText] = useState('')
   const [currentKeyPressed, setCurrentKeyPressed] = useState('')
   const [wpm, setWpm] = useState(0)
+  const [carMargin, setCarMargin] = useState('0%')
+  const [showResult, setShowResult] = useState(false)
   const [timeStamps, setTimeStamps] = useState({
     startTime: '',
     currentTime: '',
     endTime: '',
     currentWordCount: 0,
   })
-  const [showResult, setShowResult] = useState(false)
-
 
 
   const calculateWPM = () => {
@@ -106,6 +107,7 @@ const SinglePlayer = () => {
       if (incorrectTypedText.length === 0) {
         timeStamps.currentWordCount += 1
         timeStamps.currentTime = new Date().getTime()
+        setCarMargin(`${Math.floor((timeStamps.currentWordCount * 100)/sentencesArray[currentNumSentence].count)}%`)
         setInputText('')
       } else {
         setInputText(e.target.value)
@@ -184,20 +186,17 @@ const SinglePlayer = () => {
             )}
           </div>
           <div className="flex justify-between mt-2 items-center">
-            {/* here the dynamic car picture and wpm will come(wpm will be in the corner) */}
-            <div
-              className={`w-[80%] grid grid-rows-1 grid-cols-${
-                sentencesArray[currentNumSentence].count < 12
-                  ? sentencesArray[currentNumSentence].count
-                  : '12'
-              }`}
+            <div 
+              className={`w-[80%] h-fit`}
             >
-              {/* col start number and col end number will be dynamically changed */}
-              <FaCarSide
-                className={`col-start-7 col-end-8 justify-self-center`}
-                size={42}
-                color="purple"
-              />
+              <div style={{"marginLeft": carMargin}} className={`w-fit `}>
+                <FaCarSide 
+                className='inline'
+                  size={42}
+                  color="purple"                  
+                  />
+              </div>
+                
             </div>
             <h2>{wpm} wpm</h2>
           </div>
@@ -227,7 +226,6 @@ const SinglePlayer = () => {
               name="inputText"
               value={inputText}
               type="text"
-              // autoFocus
               className="w-full outline-none  rounded-md h-[5vh] p-2 text-lg"
             />
           </div>
