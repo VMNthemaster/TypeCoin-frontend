@@ -1,47 +1,16 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import useState from 'react-usestateref'
 import { useLocation } from 'react-router-dom'
 import { FaCarSide } from 'react-icons/fa'
 import Loading from '../components/Loading'
 import { useStateContext } from '../context'
-import { checkEndingOfSentence, getRandomNumbers } from '../utils'
+import { checkEndingOfSentence, getRandomNumbers, checkIgnoredKey } from '../utils'
+import SinglePlayerResult from '../components/SinglePlayerResult'
 
 const SinglePlayer = () => {
   const { state } = useLocation()
   const { getSentences } = useStateContext()
-  const ignoreKeyStrokes = [
-    'Shift',
-    'Alt',
-    'Tab',
-    'Escape',
-    'CapsLock',
-    'Control',
-    'Meta',
-    'ContextMenu',
-    'Enter',
-    'F1',
-    'F2',
-    'F3',
-    'F4',
-    'F5',
-    'F6',
-    'F7',
-    'F8',
-    'F9',
-    'F10',
-    'F11',
-    'F12',
-    'Insert',
-    'End',
-    'PageUp',
-    'PageDown',
-    'Home',
-    'Delete',
-    'ArrowUp',
-    'ArrowDown',
-    'ArrowLeft',
-    'ArrowRight',
-  ]
+  const inputRef = useRef()
 
   const [counter, setCounter] = useState(4)
   const [sentencesArray, setSentencesArray, getSentencesArray] = useState([])
@@ -49,8 +18,8 @@ const SinglePlayer = () => {
   const [currentSentence, setCurrentSentence] = useState('')
   const [currentNumSentence, setCurrentNumSentence] = useState(0 % 3)
   const [inputText, setInputText, getInputText] = useState('')
-  const [typedText, setTypedText, getTypedText] = useState('')
-  const [incorrectTypedText, setIncorrectTypedText] = useState('')
+  const [typedText, setTypedText] = useState('')
+  const [incorrectTypedText, setIncorrectTypedText, getIncorrectTypedText] = useState('')
   const [currentKeyPressed, setCurrentKeyPressed] = useState('')
   const [wpm, setWpm] = useState(0)
   const [timeStamps, setTimeStamps] = useState({
@@ -59,6 +28,9 @@ const SinglePlayer = () => {
     endTime: '',
     currentWordCount: 0,
   })
+  const [showResult, setShowResult] = useState(false)
+
+
 
   const calculateWPM = () => {
     const numOfWords = timeStamps.currentWordCount
@@ -69,7 +41,7 @@ const SinglePlayer = () => {
   }
 
   const handleInput = (e) => {
-    if (ignoreKeyStrokes.includes(currentKeyPressed)) return
+    if (checkIgnoredKey(currentKeyPressed)) return
 
     if (currentKeyPressed === 'Backspace') {
       if (incorrectTypedText.length > 0) {
@@ -109,7 +81,9 @@ const SinglePlayer = () => {
       timeStamps.currentTime = new Date().getTime()
       timeStamps.endTime = timeStamps.currentTime
       setInputText('')
+      inputRef.current.blur() // removes focus when finished typing
       calculateWPM()
+      setShowResult(true)
     }
   }
 
@@ -121,6 +95,12 @@ const SinglePlayer = () => {
       return
 
     if (currentKeyPressed === ' ') {
+      // if space is clicked when it should not have been clicked
+      if(getIncorrectTypedText.current.length === 0 && currentSentence[0] !== ' '){
+        setIncorrectTypedText(' ')
+        setInputText(e.target.value)
+        return;
+      }
       
       // if space clicked clear input field for correct typing
       if (incorrectTypedText.length === 0) {
@@ -132,6 +112,7 @@ const SinglePlayer = () => {
       }
 
       calculateWPM()
+      
     } else {
       setInputText(e.target.value)
     }
@@ -182,6 +163,7 @@ const SinglePlayer = () => {
     }
     if (counter === 0) {
       timeStamps.startTime = new Date().getTime()
+      inputRef.current.focus()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [counter, isLoading])
@@ -189,7 +171,7 @@ const SinglePlayer = () => {
   return (
     <div className="h-[90vh] bg-gray-200 w-full flex justify-center items-center">
       {isLoading && <Loading />}
-      {!isLoading && (
+      {!isLoading && !showResult && (
         <div className="card h-fit w-[40%] p-4 border-2 bg-white shadow-md rounded-md">
           <div className="flex justify-between">
             <h2 className="text-blue-500 text-lg font-semibold">
@@ -224,17 +206,18 @@ const SinglePlayer = () => {
           <div className="w-full p-4 mt-4 border-2 border-blue-300 bg-blue-100 flex flex-col gap-y-4 rounded-md">
             {sentencesArray && (
               <div
-                className={`text-xl tracking-wide ${
+                className={`text-xl tracking-[0.085em] ${
                   incorrectTypedText.length > 0 ? 'text-red-400' : ''
                 }`}
               >
-                <span className="text-green-500 text-xl tracking-wide">
+                <span className="text-green-500 text-xl tracking-[0.085em]">
                   {typedText}
                 </span>
                 {currentSentence}
               </div>
             )}
             <input
+              ref={inputRef}
               autoComplete="off"
               onKeyDown={(e) => setCurrentKeyPressed(e.key)}
               placeholder={`${
@@ -244,11 +227,14 @@ const SinglePlayer = () => {
               name="inputText"
               value={inputText}
               type="text"
-              autoFocus
+              // autoFocus
               className="w-full outline-none  rounded-md h-[5vh] p-2 text-lg"
             />
           </div>
         </div>
+      )}
+      {!isLoading && showResult && (
+        <SinglePlayerResult timeStamps={timeStamps} wpm={wpm} />
       )}
     </div>
   )

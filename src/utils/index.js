@@ -51,3 +51,43 @@ export const getRandomNumbers = (min, max, numOfNumbers) => {
 
   return numArray;
 }
+
+export const checkIgnoredKey = (key) => {
+  const ignoreKeyStrokes = [
+    'Shift',
+    'Alt',
+    'Tab',
+    'Escape',
+    'CapsLock',
+    'Control',
+    'Meta',
+    'ContextMenu',
+    'Enter',
+    'F1',
+    'F2',
+    'F3',
+    'F4',
+    'F5',
+    'F6',
+    'F7',
+    'F8',
+    'F9',
+    'F10',
+    'F11',
+    'F12',
+    'Insert',
+    'End',
+    'PageUp',
+    'PageDown',
+    'Home',
+    'Delete',
+    'ArrowUp',
+    'ArrowDown',
+    'ArrowLeft',
+    'ArrowRight',
+  ]
+
+  if(ignoreKeyStrokes.includes(key)) return true;
+
+  return false;
+}
