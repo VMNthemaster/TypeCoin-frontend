@@ -4,9 +4,12 @@ import { useLocation } from 'react-router-dom'
 import { FaCarSide } from 'react-icons/fa'
 import Loading from '../components/Loading'
 import { useStateContext } from '../context'
-import { checkEndingOfSentence, getRandomNumbers, checkIgnoredKey } from '../utils'
+import {
+  checkEndingOfSentence,
+  getRandomNumbers,
+  checkIgnoredKey,
+} from '../utils'
 import SinglePlayerResult from '../components/SinglePlayerResult'
-import '../index.css'
 
 const SinglePlayer = () => {
   const { state } = useLocation()
@@ -17,10 +20,11 @@ const SinglePlayer = () => {
   const [sentencesArray, setSentencesArray, getSentencesArray] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentSentence, setCurrentSentence] = useState('')
-  const [currentNumSentence, setCurrentNumSentence] = useState(0 % 3)
+  const [currentNumSentence, setCurrentNumSentence, getCurrentNumSentence] = useState(0 % 3)
   const [inputText, setInputText, getInputText] = useState('')
   const [typedText, setTypedText] = useState('')
-  const [incorrectTypedText, setIncorrectTypedText, getIncorrectTypedText] = useState('')
+  const [incorrectTypedText, setIncorrectTypedText, getIncorrectTypedText] =
+    useState('')
   const [currentKeyPressed, setCurrentKeyPressed] = useState('')
   const [wpm, setWpm] = useState(0)
   const [carMargin, setCarMargin] = useState('0%')
@@ -32,10 +36,10 @@ const SinglePlayer = () => {
     currentWordCount: 0,
   })
 
-
   const calculateWPM = () => {
     const numOfWords = timeStamps.currentWordCount
-    const timePassed = (timeStamps.currentTime - timeStamps.startTime)/ (60 * 1000) 
+    const timePassed =
+      (timeStamps.currentTime - timeStamps.startTime) / (60 * 1000)
     // 60 to convert it in minutes and 1000 to convert from millseconsds to seconds
     const tempWPM = Math.floor(numOfWords / timePassed)
     setWpm(tempWPM)
@@ -97,24 +101,31 @@ const SinglePlayer = () => {
 
     if (currentKeyPressed === ' ') {
       // if space is clicked when it should not have been clicked
-      if(getIncorrectTypedText.current.length === 0 && currentSentence[0] !== ' '){
+      if (
+        getIncorrectTypedText.current.length === 0 &&
+        currentSentence[0] !== ' '
+      ) {
         setIncorrectTypedText(' ')
         setInputText(e.target.value)
-        return;
+        return
       }
-      
+
       // if space clicked clear input field for correct typing
       if (incorrectTypedText.length === 0) {
         timeStamps.currentWordCount += 1
         timeStamps.currentTime = new Date().getTime()
-        setCarMargin(`${Math.floor((timeStamps.currentWordCount * 100)/sentencesArray[currentNumSentence].count)}%`)
+        setCarMargin(
+          `${Math.floor(
+            (timeStamps.currentWordCount * 100) /
+              sentencesArray[currentNumSentence].count
+          )}%`
+        )
         setInputText('')
       } else {
         setInputText(e.target.value)
       }
 
       calculateWPM()
-      
     } else {
       setInputText(e.target.value)
     }
@@ -130,10 +141,27 @@ const SinglePlayer = () => {
     }, 1000)
   }
 
+  const handleTryAgain = () => {
+    console.log("hi")
+    setWpm(0)
+    setCarMargin('0%')
+    setCurrentNumSentence(prevNum => prevNum)
+    setTypedText('')
+    setCurrentSentence(getSentencesArray.current[getCurrentNumSentence.current].sentence)
+    setTimeStamps({
+      startTime: '',
+      currentTime: '',
+      endTime: '',
+      currentWordCount: 0,
+    })
+    setCounter(4)
+    setShowResult(false)
+  }
+
   const getSentencesFromSmartContract = async () => {
     const numArray = getRandomNumbers(1, state.numOfSentences, 3)
 
-    const data = await getSentences(true, [0, 1, 2])
+    const data = await getSentences(true, numArray)
     if (data.success) {
       const parsedData = checkEndingOfSentence(data.data)
       setSentencesArray(parsedData)
@@ -144,7 +172,6 @@ const SinglePlayer = () => {
       getSentencesFromSmartContract()
     }
   }
-
 
   useEffect(() => {
     getSentencesFromSmartContract()
@@ -186,17 +213,10 @@ const SinglePlayer = () => {
             )}
           </div>
           <div className="flex justify-between mt-2 items-center">
-            <div 
-              className={`w-[80%] h-fit`}
-            >
-              <div style={{"marginLeft": carMargin}} className={`w-fit `}>
-                <FaCarSide 
-                className='inline'
-                  size={42}
-                  color="purple"                  
-                  />
+            <div className={`w-[80%] h-fit`}>
+              <div style={{ marginLeft: carMargin }} className={`w-fit `}>
+                <FaCarSide className="inline" size={42} color="purple" />
               </div>
-                
             </div>
             <h2>{wpm} wpm</h2>
           </div>
@@ -232,7 +252,17 @@ const SinglePlayer = () => {
         </div>
       )}
       {!isLoading && showResult && (
-        <SinglePlayerResult timeStamps={timeStamps} wpm={wpm} />
+        <SinglePlayerResult
+          timeStamps={timeStamps}
+          wpm={wpm}
+          setCounter={setCounter}
+          setCurrentNumSentence={setCurrentNumSentence}
+          setShowResult={setShowResult}
+          setCurrentSentence={setCurrentSentence}
+          setTypedText={setTypedText}
+          setTimeStamps={setTimeStamps}
+          handleTryAgain={handleTryAgain}
+        />
       )}
     </div>
   )

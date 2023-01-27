@@ -1,6 +1,11 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
-const SinglePlayerResult = ({timeStamps, wpm}) => {
+
+const SinglePlayerResult = ({timeStamps, wpm, handleTryAgain  }) => {
+  const navigate = useNavigate()
+
+  
   return (
     <div className="w-[40%] p-4 border-2 bg-white shadow-md rounded-md">
       <div className="flex justify-start">
@@ -16,9 +21,9 @@ const SinglePlayerResult = ({timeStamps, wpm}) => {
             <div className="time-value justify-self-center text-white font-bold text-lg">{(timeStamps.endTime - timeStamps.startTime)/1000} sec</div>
         </div>
         <div className="buttons flex justify-around p-2 mt-2">
-            <div className='bg-yellow-300 rounded-md py-2 px-4 cursor-pointer hover:bg-yellow-400'><button className='text-blue-900'>Try again</button></div>
+            <div onClick={handleTryAgain} className='bg-yellow-300 rounded-md py-2 px-4 cursor-pointer hover:bg-yellow-400'><button className='text-blue-900'>Try again</button></div>
             <div className='bg-yellow-300 rounded-md py-2 px-4 cursor-pointer hover:bg-yellow-400'><button className='text-blue-900'>New Race</button></div>
-            <div className='bg-yellow-300 rounded-md py-2 px-4 cursor-pointer hover:bg-yellow-400'><button className='text-blue-900'>Main Menu</button></div>
+            <div onClick={() => navigate('/')} className='bg-yellow-300 rounded-md py-2 px-4 cursor-pointer hover:bg-yellow-400'><button className='text-blue-900'>Main Menu</button></div>
         </div>
       </div>
     </div>
