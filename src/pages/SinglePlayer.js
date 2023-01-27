@@ -222,7 +222,7 @@ const SinglePlayer = () => {
   }, [counter, isLoading])
 
   return (
-    <div className="h-[90vh] bg-gray-200 w-full flex justify-center items-center">
+    <div className="h-[90vh] bg-gradient-to-b from-gray-100 to-gray-200 w-full flex justify-center items-center">
       {isLoading && <Loading />}
       {!isLoading && !showResult && (
         <div className="card h-fit w-[40%] p-4 border-2 bg-white shadow-md rounded-md">

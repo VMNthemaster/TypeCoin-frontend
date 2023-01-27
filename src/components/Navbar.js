@@ -12,8 +12,8 @@ const Navbar = () => {
     }
   }
   return (
-    <div className='h-[10vh] w-full bg-blue-800 flex justify-center items-center '>
-        <div onClick={handleClick} className='h-[80%] w-fit  text-lg rounded-md bg-blue-500 text-white clickEffect flex items-center cursor-pointer'>
+    <div className='h-[10vh] w-full bg-gradient-to-r from-blue-400 to-blue-800 flex justify-center items-center '>
+        <div onClick={handleClick} className='h-[80%] w-fit text-lg rounded-md bg-orange-600 text-white clickEffect flex items-center cursor-pointer'>
           {address && (
             <div className='flex w-fit justify-start h-[100%] items-center pr-[2rem]'>
             <img className='h-[100%]' src={MetaMaskLogo} alt="metamask logo" />
