@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import useState from 'react-usestateref'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { FaCarSide } from 'react-icons/fa'
 import Loading from '../components/Loading'
 import { useStateContext } from '../context'
@@ -15,6 +15,7 @@ const SinglePlayer = () => {
   const { state } = useLocation()
   const { getSentences } = useStateContext()
   const inputRef = useRef()
+  const navigate = useNavigate()
 
   const [counter, setCounter] = useState(4)
   const [sentencesArray, setSentencesArray, getSentencesArray] = useState([])
@@ -142,11 +143,10 @@ const SinglePlayer = () => {
   }
 
   const handleTryAgain = () => {
-    console.log("hi")
     setWpm(0)
     setCarMargin('0%')
-    setCurrentNumSentence(prevNum => prevNum)
     setTypedText('')
+    setCurrentNumSentence(prevNum => prevNum)
     setCurrentSentence(getSentencesArray.current[getCurrentNumSentence.current].sentence)
     setTimeStamps({
       startTime: '',
@@ -158,6 +158,29 @@ const SinglePlayer = () => {
     setShowResult(false)
   }
 
+  const handleNewRace = () => {
+    setWpm(0)
+    setCarMargin('0%')
+    setTypedText('')
+    setTimeStamps({
+      startTime: '',
+      currentTime: '',
+      endTime: '',
+      currentWordCount: 0,
+    })
+    setCurrentNumSentence(prevNum => (prevNum+1)%3)
+    
+    if(getCurrentNumSentence.current === 0){
+      setIsLoading(true)
+      getSentencesFromSmartContract()
+    }
+    else{
+      setCounter(4)
+      setCurrentSentence(getSentencesArray.current[getCurrentNumSentence.current].sentence)
+      setShowResult(false)
+    }
+  }
+
   const getSentencesFromSmartContract = async () => {
     const numArray = getRandomNumbers(1, state.numOfSentences, 3)
 
@@ -165,9 +188,10 @@ const SinglePlayer = () => {
     if (data.success) {
       const parsedData = checkEndingOfSentence(data.data)
       setSentencesArray(parsedData)
-      // console.log(getSentencesArray.current)
       setCurrentSentence(parsedData[currentNumSentence].sentence)
       setIsLoading(false)
+      setCounter(4)
+      setShowResult(false)
     } else {
       getSentencesFromSmartContract()
     }
@@ -222,6 +246,8 @@ const SinglePlayer = () => {
           </div>
           <hr className="w-[80%] border-2 border-dashed border-red-400" />
 
+          <div onClick={() => navigate('/')} className='flex justify-start cursor-pointer mt-4'><button className='bg-yellow-300 rounded-md hover:bg-yellow-400 text-blue-900 px-4 py-2'>Main Menu</button></div>
+            
           <div className="w-full p-4 mt-4 border-2 border-blue-300 bg-blue-100 flex flex-col gap-y-4 rounded-md">
             {sentencesArray && (
               <div
@@ -255,13 +281,8 @@ const SinglePlayer = () => {
         <SinglePlayerResult
           timeStamps={timeStamps}
           wpm={wpm}
-          setCounter={setCounter}
-          setCurrentNumSentence={setCurrentNumSentence}
-          setShowResult={setShowResult}
-          setCurrentSentence={setCurrentSentence}
-          setTypedText={setTypedText}
-          setTimeStamps={setTimeStamps}
           handleTryAgain={handleTryAgain}
+          handleNewRace={handleNewRace}
         />
       )}
     </div>
