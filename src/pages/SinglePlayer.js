@@ -272,7 +272,7 @@ const SinglePlayer = () => {
               name="inputText"
               value={inputText}
               type="text"
-              className="w-full outline-none  rounded-md h-[5vh] p-2 text-lg"
+              className={`w-full outline-none  rounded-md h-[5vh] p-2 text-lg ${counter <= 0 ? 'border-2 border-black': ''}`}
             />
           </div>
         </div>

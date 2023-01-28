@@ -5,7 +5,7 @@ import {ethers} from 'ethers'
 const StateContext = createContext()
 
 export const StateContextProvider = ({children}) => {
-    const {contract} = useContract('0x7A968eBD2D60C55914292D6CCE37b2EB8c20315f')    // contract address
+    const {contract} = useContract('0x3a733129D0869029eee200AD2Ff59E351511BA84')    // contract address
 
     const address = useAddress()    // gives the address of the connected wallet
     const connect = useMetamask()
@@ -14,11 +14,15 @@ export const StateContextProvider = ({children}) => {
         try {
             const data = await contract.call('receiveEthFromParticipant', {value: ethers.utils.parseEther('0.005')})
             // 0.005 is the participation amount in ethereum
-            console.log("success",data)
-            return data;
+            return {
+                success: true,
+                data,
+            }
         } catch (error) {
-            console.log("failed",error)
-            return error;
+            return {
+                success: false,
+                error,
+            }
         }
     }
 
