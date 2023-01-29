@@ -11,16 +11,17 @@ const Username = () => {
   const [message, setMessage] = useState('')
   const [hideButton, setHideButton] = useState(false)
 
-  const tempFunc = () => {
-    socket.emit('send_message', {msg: 'Sent hello'})
-  }
-
   useEffect(() => {
-    socket.on('receive_message', (data) => {
-      console.log(data.msg)
+    socket.on('get_room_id_from_backend', (data) => {
+      console.log(data)
     })
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket])
+
+  const getRoomId = () => {
+    socket.emit('get_room_id', {username})
+  }
   
 
   const handleChange = (e) => {
@@ -37,8 +38,8 @@ const Username = () => {
     // first check if metamask wallet is connected or not
     if (address) {
       const data = await sendParticipationAmount()
-      console.log(data)
       if (data.success) {
+        getRoomId()
         // navigate to racing page
       } else {
         setMessage('Transaction failed....Please try again')
@@ -95,7 +96,6 @@ const Username = () => {
         )}
       </div>
 
-      <button onClick={tempFunc}>Send hello</button>
     </div>
   )
 }
