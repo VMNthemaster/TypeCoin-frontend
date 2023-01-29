@@ -66,8 +66,19 @@ const SinglePlayer = () => {
 
     // checks if the key pressed is correct or not
     if (currentKeyPressed === currentSentence[0]) {
+      // if word is incorrect but the next letter is correct case
+      if(getIncorrectTypedText.current.length>0){
+        if (getIncorrectTypedText.current.length > 5) {
+          setInputText((prevText) => prevText.substring(0, prevText.length - 1))
+        } else {
+          setIncorrectTypedText((prevText) => prevText + currentKeyPressed)
+        }
+        return;
+      }
+
       setTypedText((prevText) => prevText + currentKeyPressed)
       setCurrentSentence((prevText) => prevText.slice(1))
+
     } else {
       // only add it to the incorrect string if already typed incorrect list length is less than 5
       if (incorrectTypedText.length > 5) {

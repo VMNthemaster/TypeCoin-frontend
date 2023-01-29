@@ -1,12 +1,27 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useStateContext } from '../context'
 import { backgroundImageClasses } from '../utils'
 import ProcessingImage from '../assets/processing.png'
+import io from 'socket.io-client'
+const socket = io.connect('http://localhost:5000')
+
 const Username = () => {
   const { sendParticipationAmount, address } = useStateContext()
   const [username, setUsername] = useState('')
   const [message, setMessage] = useState('')
   const [hideButton, setHideButton] = useState(false)
+
+  const tempFunc = () => {
+    socket.emit('send_message', {msg: 'Sent hello'})
+  }
+
+  useEffect(() => {
+    socket.on('receive_message', (data) => {
+      console.log(data.msg)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket])
+  
 
   const handleChange = (e) => {
     setUsername(e.target.value)
@@ -26,7 +41,7 @@ const Username = () => {
       if (data.success) {
         // navigate to racing page
       } else {
-        setMessage('Insuffcient funds to process transaction....')
+        setMessage('Transaction failed....Please try again')
         setHideButton(false)
 
         setTimeout(() => {
@@ -35,8 +50,13 @@ const Username = () => {
       }
     } else {
       setMessage('Connect to metamask wallet to process transaction....')
+      setHideButton(false)
+      setTimeout(() => {
+        setMessage('')
+      }, 3000);
     }
   }
+
   return (
     <div
       className={`min-h-[90vh] flex my-auto items-center justify-center`}
@@ -74,6 +94,8 @@ const Username = () => {
           </div>
         )}
       </div>
+
+      <button onClick={tempFunc}>Send hello</button>
     </div>
   )
 }
