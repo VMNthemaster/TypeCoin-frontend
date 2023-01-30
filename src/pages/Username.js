@@ -3,9 +3,12 @@ import { useStateContext } from '../context'
 import { backgroundImageClasses } from '../utils'
 import ProcessingImage from '../assets/processing.png'
 import io from 'socket.io-client'
+import { useNavigate } from 'react-router-dom'
 const socket = io.connect('http://localhost:5000')
 
+
 const Username = () => {
+  const navigate = useNavigate()
   const { sendParticipationAmount, address } = useStateContext()
   const [username, setUsername] = useState('')
   const [message, setMessage] = useState('')
@@ -14,6 +17,8 @@ const Username = () => {
   useEffect(() => {
     socket.on('get_room_id_from_backend', (data) => {
       console.log(data)
+      navigate(`/multi/${data.roomId}`, {state: {roomData: data}})
+
     })
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
