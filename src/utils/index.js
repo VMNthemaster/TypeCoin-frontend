@@ -15,7 +15,7 @@ export const showAddress = (addr) => {
 // checks whether the sentence ends with a fullstop, exlamation, etc and also counts number of words in the sentence
 export const checkEndingOfSentence = (sentenceArray) => {
   const parsedData = []
-  for(let i = 0; i < 3; i++){
+  for(let i = 0; i < sentenceArray.length; i++){
     if(sentenceArray[i].endsWith('.' || '!' || '?' || ';' || '(' || ')')){
       countNumOfWords(sentenceArray[i], parsedData, i)
     }

@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { useStateContext } from '../context'
 import { backgroundImageClasses } from '../utils'
 import ProcessingImage from '../assets/processing.png'
+import { useNavigate, useLocation } from 'react-router-dom'
 import io from 'socket.io-client'
-import { useNavigate } from 'react-router-dom'
 const socket = io.connect('http://localhost:5000')
 
 
 const Username = () => {
+  const {state} = useLocation()
   const navigate = useNavigate()
   const { sendParticipationAmount, address } = useStateContext()
   const [username, setUsername] = useState('')
@@ -17,7 +18,7 @@ const Username = () => {
   useEffect(() => {
     socket.on('get_room_id_from_backend', (data) => {
       console.log(data)
-      navigate(`/multi/${data.roomId}`, {state: {roomData: data}})
+      navigate(`/multi/${data.roomId}`, {state: {roomData: {...data, numOfSentences: state.numOfSentences}}})
 
     })
 
