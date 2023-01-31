@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useStateContext } from '../context'
 import { backgroundImageClasses } from '../utils'
 import ProcessingImage from '../assets/processing.png'
 import { useNavigate, useLocation } from 'react-router-dom'
-import io from 'socket.io-client'
-const socket = io.connect('http://localhost:5000')
+import axios from 'axios'
 
 
 const Username = () => {
@@ -15,18 +14,21 @@ const Username = () => {
   const [message, setMessage] = useState('')
   const [hideButton, setHideButton] = useState(false)
 
-  useEffect(() => {
-    socket.on('get_room_id_from_backend', (data) => {
-      console.log(data)
-      navigate(`/multi/${data.roomId}`, {state: {roomData: {...data, numOfSentences: state.numOfSentences}}})
-
+  const getRoomDetailsFromBackend = async () => {
+    const url = 'http://localhost:5000/getRoomData'
+    const res = await axios.post(url, {
+        username: username
     })
+    const data = await res.data
+    return data
+  }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket])
+  const getRoomId = async () => {
+    // socket.emit('get_room_id', {username})
+    const data = await getRoomDetailsFromBackend()
+    console.log(data)
+    navigate(`/multi/${data.roomId}`, {state: {roomData: {...data, numOfSentences: state.numOfSentences}}})
 
-  const getRoomId = () => {
-    socket.emit('get_room_id', {username})
   }
   
 
@@ -43,8 +45,8 @@ const Username = () => {
 
     // first check if metamask wallet is connected or not
     if (address) {
-      const data = await sendParticipationAmount()
-      if (data.success) {
+      // const data = await sendParticipationAmount()
+      if (true) {   // if(data.success)
         getRoomId()
         // navigate to racing page
       } else {
@@ -76,6 +78,7 @@ const Username = () => {
           name="username"
           value={username}
           onChange={handleChange}
+          autoFocus
           type="text"
         />
         {/* submit button */}
