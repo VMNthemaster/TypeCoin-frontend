@@ -8,7 +8,6 @@ import axios from 'axios'
 
 const Username = () => {
   const {state} = useLocation()
-  console.log(state)
   const navigate = useNavigate()
   const { sendParticipationAmount, address } = useStateContext()
   const [username, setUsername] = useState('')

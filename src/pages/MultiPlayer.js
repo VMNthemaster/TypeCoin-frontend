@@ -15,6 +15,7 @@ const MultiPlayer = () => {
   // console.log(state)
   const [roomData, setRoomData] = useState(undefined)
   const [sentenceData, setSentenceData, getSentenceData] = useState({})
+  const [loading, setLoading] = useState(true)
 
 
   const sendSentenceDataToBackend = async () => {
@@ -63,6 +64,11 @@ const MultiPlayer = () => {
   useEffect(() => {
     console.log("socket")
 
+    socket.on("set_loading_false", (data) => {
+      console.log(data)
+      setLoading(false)
+    })
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket])
   
@@ -74,6 +80,8 @@ const MultiPlayer = () => {
     }
 
     setRoomData(state.roomData)
+
+    socket.connect()
 
     joinRoom()
 
@@ -88,6 +96,11 @@ const MultiPlayer = () => {
       }
       asyncGetSentenceDataFromBackend()
     }
+
+    if(state.roomData.currentRoomCount === 3){
+      socket.emit("change_loading_state", {roomId: room}) 
+    }
+
 
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,6 +119,7 @@ const MultiPlayer = () => {
             {roomData.usernames.player3}
           </div>
           {sentenceData && <div>{sentenceData.sentence}</div>}  
+          <div>{`${loading}` }</div>
         </>
       )}
     </div>
