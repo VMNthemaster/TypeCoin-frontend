@@ -2,8 +2,9 @@ import React, { useEffect } from 'react'
 import useState from 'react-usestateref'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useStateContext } from '../context'
-import io from 'socket.io-client'
 import { checkEndingOfSentence, getRandomNumbers } from '../utils'
+import axios from 'axios'
+import io from 'socket.io-client'
 const socket = io.connect('http://localhost:5000')
 
 const MultiPlayer = () => {
@@ -11,18 +12,32 @@ const MultiPlayer = () => {
   const {getSentences} = useStateContext()
   const navigate = useNavigate()
   const { state } = useLocation()
-  console.log(state)
+  // console.log(state)
   const [roomData, setRoomData] = useState(undefined)
   const [sentenceData, setSentenceData, getSentenceData] = useState({})
 
-  const notifyRoomIsFull = () => {
-    console.log("notify")
-    socket.emit('get_sentence_from_first_player', {roomId: state.roomData.roomId})
+
+  const sendSentenceDataToBackend = async () => {
+    const url = 'http://localhost:5000/getSentenceData'
+    const res = await axios.post(url, {
+      sentenceData: getSentenceData.current,
+      roomId: room,
+    })
+
+    const data = await res.data
+    return data;
   }
 
-  const sendSentenceDataToRoom = (parsedData) => {
-    socket.emit('send_sentence_to_room', {...parsedData, roomId: state.roomData.roomId})
+  const getSentenceDataFromBackend = async () => {
+    const url = 'http://localhost:5000/sendSentenceData'
+    const res = await axios.post(url, {
+      roomId: room,
+    })
+
+    const data = await res.data
+    return data;
   }
+
 
   const getSentencesFromSmartContract = async () => {
     const numArray = getRandomNumbers(1,state.roomData.numOfSentences, 1)
@@ -36,26 +51,17 @@ const MultiPlayer = () => {
     else{
       getSentencesFromSmartContract()
     }
+
+    // send the sentenceData to backend and other players joining the room will get data directly from there
+    sendSentenceDataToBackend()
   }
 
   const joinRoom = () => {
-    socket.on("join_room", {roomId: room})
+    socket.emit("join_room", {roomId: room})
   }
 
   useEffect(() => {
-    socket.on('get_sentence_from_first_player_backend', () => {
-      console.log("reached here")
-      console.log(state)
-      if(state.roomData.currentRoomCount === 1){
-        console.log("player1")
-        sendSentenceDataToRoom(getSentenceData.current)
-      }
-    })
-
-    socket.on('send_sentence_to_room_backend', (data) => {
-      setSentenceData(data)
-      console.log("sentence reached to everyone")
-    })
+    console.log("socket")
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket])
@@ -74,10 +80,15 @@ const MultiPlayer = () => {
     if(state.roomData.currentRoomCount === 1){
       getSentencesFromSmartContract()
     }
-
-    if(state.roomData.playState){
-      notifyRoomIsFull()
+    else{
+      const asyncGetSentenceDataFromBackend = async () => {
+        const data = await getSentenceDataFromBackend()
+        console.log(data)
+        setSentenceData(data)
+      }
+      asyncGetSentenceDataFromBackend()
     }
+
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -94,6 +105,7 @@ const MultiPlayer = () => {
             {roomData.usernames.player2}
             {roomData.usernames.player3}
           </div>
+          {sentenceData && <div>{sentenceData.sentence}</div>}  
         </>
       )}
     </div>

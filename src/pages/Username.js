@@ -8,6 +8,7 @@ import axios from 'axios'
 
 const Username = () => {
   const {state} = useLocation()
+  console.log(state)
   const navigate = useNavigate()
   const { sendParticipationAmount, address } = useStateContext()
   const [username, setUsername] = useState('')
@@ -26,7 +27,6 @@ const Username = () => {
   const getRoomId = async () => {
     // socket.emit('get_room_id', {username})
     const data = await getRoomDetailsFromBackend()
-    console.log(data)
     navigate(`/multi/${data.roomId}`, {state: {roomData: {...data, numOfSentences: state.numOfSentences}}})
 
   }
