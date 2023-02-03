@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react'
 import useState from 'react-usestateref'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useStateContext } from '../context'
-import { checkEndingOfSentence, getRandomNumbers } from '../utils'
+import { checkEndingOfSentence, checkIgnoredKey, getRandomNumbers } from '../utils'
 import axios from 'axios'
 import io from 'socket.io-client'
 import Car from '../components/Car'
@@ -21,6 +21,7 @@ const MultiPlayer = () => {
   const [loading, setLoading] = useState(true)
   const [counter, setCounter] = useState(4)
   const [currentPlayerNumber, setCurrentPlayerNumber] = useState('')
+  const [showResult, setShowResult] = useState(false)
 
   const [carMargin, setCarMargin] = useState({
     player1: '0%',
@@ -32,11 +33,18 @@ const MultiPlayer = () => {
     player2: 0,
     player3: 0,
   })
+  const [timeStamps, setTimeStamps] = useState({
+    startTime: '',
+    currentTime: '',
+    endTime: '',
+    currentWordCount: 0,
+  })
 
   const [inputText, setInputText, getInputText] = useState('')
   const [currentKeyPressed, setCurrentKeyPressed] = useState('')
   const [typedText, setTypedText] = useState('')
-  const [incorrectTypedText, setIncorrectTypedText] = useState('')
+  const [incorrectTypedText, setIncorrectTypedText, getIncorrectTypedText] =
+    useState('')
   const [currentSentence, setCurrentSentence] = useState('')
   const [redColorText, setRedColorText] = useState('')
   // this one will be used to only make the text red which is wrong and not the whole sentence.
@@ -86,6 +94,11 @@ const MultiPlayer = () => {
       handleCounter()
     }
 
+    if (counter === 0) {
+      timeStamps.startTime = new Date().getTime()
+      inputRef.current.focus()
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [counter, loading])
 
@@ -94,7 +107,9 @@ const MultiPlayer = () => {
       if (data.roomId === room) {
         // at this point everybody has all data
         setCurrentSentence(getSentenceData.current.sentence)
-        setLoading(false) // we can set it to false later as well
+        setTimeout(() => {
+          setLoading(false) // we can set it to false later as well
+        }, 1000)
       }
     })
 
@@ -135,6 +150,20 @@ const MultiPlayer = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const calculateWPM = () => {
+    const numOfWords = timeStamps.currentWordCount
+    const timePassed =
+      (timeStamps.currentTime - timeStamps.startTime) / (60 * 1000)
+    // 60 to convert it in minutes and 1000 to convert from millseconsds to seconds
+    const tempWPM = Math.floor(numOfWords / timePassed)
+    setWpm(prevWPM => {
+      return {
+        ...prevWPM,
+        [`${currentPlayerNumber}`]: tempWPM
+      }
+    })
+  }
+
   const handleCounter = async () => {
     setTimeout(() => {
       if (counter >= 0) {
@@ -145,8 +174,106 @@ const MultiPlayer = () => {
 
   // io functions
   const handleChange = (e) => {
-    setInputText(e.target.value)
-    console.log(getInputText.current)
+    if (counter > 0) return
+    if (timeStamps.currentWordCount === sentenceData.count) return
+
+    if (currentKeyPressed === ' ') {
+      // if space is clicked when it should not have been clicked
+      if (
+        getIncorrectTypedText.current.length === 0 &&
+        currentSentence[0] !== ' '
+      ) {
+        setIncorrectTypedText(' ')
+        setInputText(e.target.value)
+        return
+      }
+
+      // if space clicked clear input field for correct typing
+      if (incorrectTypedText.length === 0) {
+        timeStamps.currentWordCount += 1
+        timeStamps.currentTime = new Date().getTime()
+
+        setCarMargin((prevMargin) => {
+          return {
+            ...prevMargin,
+            [`player${currentPlayerNumber}`]: `${Math.floor(
+              (timeStamps.currentWordCount * 100) / sentenceData.count
+            )}%`,
+          }
+        })
+        console.log(carMargin)
+        setInputText('')
+      } else {
+        setInputText(e.target.value)
+      }
+
+      calculateWPM()
+    } else {
+      setInputText(e.target.value)
+    }
+
+    handleInput(e)
+  }
+
+  const handleInput = () => {
+    if (checkIgnoredKey(currentKeyPressed)) return
+
+    // backspace
+    if (currentKeyPressed === 'Backspace') {
+      if (incorrectTypedText.length > 0) {
+        setIncorrectTypedText((prevText) =>
+          prevText.substring(0, incorrectTypedText.length - 1)
+        )
+      } else {
+        setCurrentSentence(
+          (prevText) => typedText.charAt(typedText.length - 1) + prevText
+        )
+        setTypedText((prevText) => prevText.substring(0, prevText.length - 1)) // removes last character from the string
+      }
+
+      return
+    }
+
+    // checks if the key pressed is correct or not
+    if (currentKeyPressed === currentSentence[0]) {
+      // if word is incorrect but the next letter is correct case
+      if(getIncorrectTypedText.current.length>0){
+        if (getIncorrectTypedText.current.length > 5) {
+          setInputText((prevText) => prevText.substring(0, prevText.length - 1))
+        } else {
+          setIncorrectTypedText((prevText) => prevText + currentKeyPressed)
+        }
+
+        return;
+      }
+
+      setTypedText((prevText) => prevText + currentKeyPressed)
+      setCurrentSentence((prevText) => prevText.slice(1))
+
+    } else {
+      // only add it to the incorrect string if already typed incorrect list length is less than 5
+      if (incorrectTypedText.length > 5) {
+        setInputText((prevText) => prevText.substring(0, prevText.length - 1))
+      } else {
+        setIncorrectTypedText((prevText) => prevText + currentKeyPressed)
+      }
+    }
+
+    // handling last word
+    if (
+      timeStamps.currentWordCount ===
+        sentenceData.count - 1 &&
+      getInputText.current === sentenceData.lastWord
+    ) {
+      timeStamps.currentWordCount += 1
+      timeStamps.currentTime = new Date().getTime()
+      timeStamps.endTime = timeStamps.currentTime
+      setInputText('')
+      inputRef.current.blur() // removes focus when finished typing
+      calculateWPM()
+      setShowResult(true)
+    }
+
   }
 
   return (
@@ -209,7 +336,9 @@ const MultiPlayer = () => {
 
           {/* sentence and input */}
           <div className="w-full p-4 mt-4 border-2 border-blue-300 bg-blue-100 flex flex-col gap-y-4 rounded-md">
-            <div className={`text-xl tracking-[0.085em]`}>
+            <div className={`text-xl tracking-[0.085em] ${
+                  incorrectTypedText.length > 0 ? 'text-red-400' : ''
+                }`}>
               <span className="text-green-500 text-xl tracking-[0.085em]">
                 {typedText}
               </span>

@@ -84,7 +84,7 @@ const Username = () => {
         <div className="flex justify-center mt-4">
           {!hideButton && (
             <button
-              className="bg-orange-600 text-white mx-auto p-2 rounded-md w-full clickEffect"
+              className="bg-orange-600 text-white mx-auto p-2 rounded-md w-full clickEffect focus:outline-none focus:font-bold"
               onClick={handleSubmit}
             >
               Go!
