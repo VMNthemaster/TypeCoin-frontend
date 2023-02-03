@@ -1,24 +1,27 @@
 import Loading from '../components/Loading'
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import useState from 'react-usestateref'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useStateContext } from '../context'
 import { checkEndingOfSentence, getRandomNumbers } from '../utils'
 import axios from 'axios'
-import { FaCarSide } from 'react-icons/fa'
 import io from 'socket.io-client'
+import Car from '../components/Car'
 const socket = io.connect('http://localhost:5000')
 
 const MultiPlayer = () => {
   let { room } = useParams()
   const { getSentences } = useStateContext()
   const navigate = useNavigate()
+  const inputRef = useRef()
   const { state } = useLocation()
+
   const [roomData, setRoomData] = useState(undefined)
   const [sentenceData, setSentenceData, getSentenceData] = useState({})
   const [loading, setLoading] = useState(true)
   const [counter, setCounter] = useState(4)
   const [currentPlayerNumber, setCurrentPlayerNumber] = useState('')
+
   const [carMargin, setCarMargin] = useState({
     player1: '0%',
     player2: '0%',
@@ -29,6 +32,14 @@ const MultiPlayer = () => {
     player2: 0,
     player3: 0,
   })
+
+  const [inputText, setInputText, getInputText] = useState('')
+  const [currentKeyPressed, setCurrentKeyPressed] = useState('')
+  const [typedText, setTypedText] = useState('')
+  const [incorrectTypedText, setIncorrectTypedText] = useState('')
+  const [currentSentence, setCurrentSentence] = useState('')
+  const [redColorText, setRedColorText] = useState('')
+  // this one will be used to only make the text red which is wrong and not the whole sentence.
 
   const sendSentenceDataToBackend = async () => {
     const url = 'http://localhost:5000/getSentenceData'
@@ -71,9 +82,18 @@ const MultiPlayer = () => {
   }
 
   useEffect(() => {
+    if (!loading) {
+      handleCounter()
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [counter, loading])
+
+  useEffect(() => {
     socket.on('set_loading_false', (data) => {
       if (data.roomId === room) {
         // at this point everybody has all data
+        setCurrentSentence(getSentenceData.current.sentence)
         setLoading(false) // we can set it to false later as well
       }
     })
@@ -99,7 +119,11 @@ const MultiPlayer = () => {
       const asyncGetSentenceDataFromBackend = async () => {
         const data = await getSentenceDataFromBackend()
         setSentenceData(data)
-        setCurrentPlayerNumber(Object.keys(state.roomData.usernames)[state.roomData.currentRoomCount - 1])
+        setCurrentPlayerNumber(
+          Object.keys(state.roomData.usernames)[
+            state.roomData.currentRoomCount - 1
+          ]
+        )
       }
       asyncGetSentenceDataFromBackend()
     }
@@ -110,6 +134,20 @@ const MultiPlayer = () => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleCounter = async () => {
+    setTimeout(() => {
+      if (counter >= 0) {
+        setCounter(counter - 1)
+      }
+    }, 1000)
+  }
+
+  // io functions
+  const handleChange = (e) => {
+    setInputText(e.target.value)
+    console.log(getInputText.current)
+  }
 
   return (
     <div
@@ -132,16 +170,34 @@ const MultiPlayer = () => {
           </div>
 
           {/* car, there will be three cars */}
-          <div className="flex justify-between mt-2 items-center">
-            <div className={`w-[80%] h-fit`}>
-              <div style={{ marginLeft: carMargin }} className={`w-fit `}>
-                <FaCarSide className="inline" size={42} color="purple" />
-              </div>
-            </div>
-            <h2>{wpm.player1} wpm</h2>
-          </div>
-          <hr className="w-[80%] border-2 border-dashed border-red-400" />
+          <div className="flex flex-col w-[100%]">
+            {/* car 1 */}
+            <Car
+              wpm={wpm}
+              carMargin={carMargin}
+              color="orange"
+              playerNum="player1"
+            />
+            <hr className="w-[80%] border-2 border-dashed border-red-400" />
 
+            <Car
+              wpm={wpm}
+              carMargin={carMargin}
+              color="brown"
+              playerNum="player2"
+            />
+            <hr className="w-[80%] border-2 border-dashed border-red-400" />
+
+            <Car
+              wpm={wpm}
+              carMargin={carMargin}
+              color="purple"
+              playerNum="player3"
+            />
+            <hr className="w-[80%] border-2 border-dashed border-red-400" />
+          </div>
+
+          {/* main menu */}
           <div
             onClick={() => navigate('/')}
             className="flex justify-start cursor-pointer mt-4"
@@ -152,7 +208,33 @@ const MultiPlayer = () => {
           </div>
 
           {/* sentence and input */}
-          <div className="w-full p-4 mt-4 border-2 border-blue-300 bg-blue-100 flex flex-col gap-y-4 rounded-md"></div>
+          <div className="w-full p-4 mt-4 border-2 border-blue-300 bg-blue-100 flex flex-col gap-y-4 rounded-md">
+            <div className={`text-xl tracking-[0.085em]`}>
+              <span className="text-green-500 text-xl tracking-[0.085em]">
+                {typedText}
+              </span>
+              <span className="text-red-400 text-xl tracking-[0.085em]">
+                {redColorText}
+              </span>
+              {currentSentence}
+            </div>
+
+            <input
+              ref={inputRef}
+              autoComplete="off"
+              onKeyDown={(e) => setCurrentKeyPressed(e.key)}
+              placeholder={`${
+                counter <= 0 ? '' : 'Start typing when the race begins....'
+              }`}
+              onChange={handleChange}
+              name="inputText"
+              value={inputText}
+              type="text"
+              className={`w-full outline-none  rounded-md h-[5vh] p-2 text-lg ${
+                counter <= 0 ? 'border-2 border-black' : ''
+              }`}
+            />
+          </div>
         </div>
       )}
     </div>
