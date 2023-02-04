@@ -16,7 +16,6 @@ const MultiPlayer = () => {
   const inputRef = useRef()
   const { state } = useLocation()
 
-  const [roomData, setRoomData] = useState(undefined)
   const [sentenceData, setSentenceData, getSentenceData] = useState({})
   const [loading, setLoading] = useState(true)
   const [counter, setCounter] = useState(4)
@@ -45,7 +44,7 @@ const MultiPlayer = () => {
   const [typedText, setTypedText] = useState('')
   const [incorrectTypedText, setIncorrectTypedText, getIncorrectTypedText] =
     useState('')
-  const [currentSentence, setCurrentSentence] = useState('')
+  const [currentSentence, setCurrentSentence, getCurrentSentence] = useState('')
   const [redColorText, setRedColorText] = useState('')
   // this one will be used to only make the text red which is wrong and not the whole sentence.
 
@@ -109,7 +108,7 @@ const MultiPlayer = () => {
         setCurrentSentence(getSentenceData.current.sentence)
         setTimeout(() => {
           setLoading(false) // we can set it to false later as well
-        }, 1000)
+        }, 2000)
       }
     })
 
@@ -117,12 +116,26 @@ const MultiPlayer = () => {
   }, [socket])
 
   useEffect(() => {
+    if(currentKeyPressed === 'Backspace'){
+      const slicedText = redColorText.slice(redColorText.length - 1)
+      setRedColorText(prevText => prevText.substring(0, redColorText.length - 1))
+      setCurrentSentence(prevText => slicedText + prevText)
+      return;
+    }
+
+    const slicedText = currentSentence.slice(0,1)
+    setRedColorText(prev => prev + slicedText)
+    setCurrentSentence(currentSentence.slice(1))
+    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incorrectTypedText])
+  
+
+  useEffect(() => {
     if (state === null) {
       navigate('/username')
       return
     }
-
-    setRoomData(state.roomData)
 
     socket.connect()
 
@@ -151,6 +164,7 @@ const MultiPlayer = () => {
   }, [])
 
   const calculateWPM = () => {
+    console.log("calculate")
     const numOfWords = timeStamps.currentWordCount
     const timePassed =
       (timeStamps.currentTime - timeStamps.startTime) / (60 * 1000)
@@ -201,7 +215,6 @@ const MultiPlayer = () => {
             )}%`,
           }
         })
-        console.log(carMargin)
         setInputText('')
       } else {
         setInputText(e.target.value)
@@ -336,16 +349,14 @@ const MultiPlayer = () => {
 
           {/* sentence and input */}
           <div className="w-full p-4 mt-4 border-2 border-blue-300 bg-blue-100 flex flex-col gap-y-4 rounded-md">
-            <div className={`text-xl tracking-[0.085em] ${
-                  incorrectTypedText.length > 0 ? 'text-red-400' : ''
-                }`}>
+            <div className={`text-xl tracking-[0.085em]`}>
               <span className="text-green-500 text-xl tracking-[0.085em]">
                 {typedText}
               </span>
-              <span className="text-red-400 text-xl tracking-[0.085em]">
+              <span className="bg-red-300 text-xl tracking-[0.085em]">
                 {redColorText}
               </span>
-              {currentSentence}
+              {getCurrentSentence.current}
             </div>
 
             <input
@@ -361,7 +372,7 @@ const MultiPlayer = () => {
               type="text"
               className={`w-full outline-none  rounded-md h-[5vh] p-2 text-lg ${
                 counter <= 0 ? 'border-2 border-black' : ''
-              }`}
+              } ${incorrectTypedText.length > 0 ? 'bg-red-300' : ''}`}
             />
           </div>
         </div>
