@@ -19,7 +19,7 @@ const MultiPlayer = () => {
   const [sentenceData, setSentenceData, getSentenceData] = useState({})
   const [loading, setLoading] = useState(true)
   const [counter, setCounter] = useState(4)
-  const [currentPlayerNumber, setCurrentPlayerNumber] = useState('')
+  const [currentPlayerNumber, setCurrentPlayerNumber, getCurrentPlayerNumber] = useState('')
   const [showResult, setShowResult] = useState(false)
 
   const [carMargin, setCarMargin] = useState({
@@ -143,6 +143,7 @@ const MultiPlayer = () => {
 
     if (state.roomData.currentRoomCount === 1) {
       getSentencesFromSmartContract()
+      setCurrentPlayerNumber("player1")
     } else {
       const asyncGetSentenceDataFromBackend = async () => {
         const data = await getSentenceDataFromBackend()
@@ -164,7 +165,6 @@ const MultiPlayer = () => {
   }, [])
 
   const calculateWPM = () => {
-    console.log("calculate")
     const numOfWords = timeStamps.currentWordCount
     const timePassed =
       (timeStamps.currentTime - timeStamps.startTime) / (60 * 1000)
