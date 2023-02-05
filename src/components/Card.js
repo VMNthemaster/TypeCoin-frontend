@@ -7,10 +7,10 @@ const Card = ({
   buttonText,
   colorObject,
   navigateTo,
-  numOfSentences,
   tabIndex,
 }) => {
   const navigate = useNavigate()
+
   return (
     <div className="flex flex-col my-auto ">
       <div>
@@ -21,7 +21,7 @@ const Card = ({
         <div className="mt-[3vh]">
           <button
             tabIndex={tabIndex}
-            onClick={() => navigate(navigateTo, { state: { numOfSentences } })}
+            onClick={() => navigate(navigateTo)}
             className={`text-white ${colorObject.buttonColor} px-[1.25rem] py-[0.75rem] rounded-md clickEffect focus:outline-none focus:font-bold`}
           >
             {buttonText}

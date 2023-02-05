@@ -2,12 +2,11 @@ import React, { useState } from 'react'
 import { useStateContext } from '../context'
 import { backgroundImageClasses } from '../utils'
 import ProcessingImage from '../assets/processing.png'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 
 const Username = () => {
-  const {state} = useLocation()
   const navigate = useNavigate()
   const { sendParticipationAmount, address } = useStateContext()
   const [username, setUsername] = useState('')
@@ -26,7 +25,7 @@ const Username = () => {
   const getRoomId = async () => {
     // socket.emit('get_room_id', {username})
     const data = await getRoomDetailsFromBackend()
-    navigate(`/multi/${data.roomId}`, {state: {roomData: {...data, numOfSentences: state.numOfSentences}}})
+    navigate(`/multi/${data.roomId}`, {state: {roomData: data}})
 
   }
   

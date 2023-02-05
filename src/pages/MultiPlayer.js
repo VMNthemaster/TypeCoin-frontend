@@ -11,11 +11,12 @@ const socket = io.connect('http://localhost:5000')
 
 const MultiPlayer = () => {
   let { room } = useParams()
-  const { getSentences } = useStateContext()
+  const { getSentences, getTotalNumberOfSentences } = useStateContext()
   const navigate = useNavigate()
   const inputRef = useRef()
   const { state } = useLocation()
 
+  const [, setNumOfSentences, getNumOfSentences] = useState(1)
   const [roomData, setRoomData] = useState({})
   const [sentenceData, setSentenceData, getSentenceData] = useState({})
   const [loading, setLoading] = useState(true)
@@ -71,7 +72,9 @@ const MultiPlayer = () => {
   }
 
   const getSentencesFromSmartContract = async () => {
-    const numArray = getRandomNumbers(1, state.roomData.numOfSentences, 1)
+    const num = await getTotalNumberOfSentences()
+    setNumOfSentences(Number(num.num._hex))
+    const numArray = getRandomNumbers(1, getNumOfSentences.current, 1)
 
     const data = await getSentences(false, numArray) // false since multiplayer
     if (data.success) {

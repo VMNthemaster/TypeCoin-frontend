@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import useState from 'react-usestateref'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { FaCarSide } from 'react-icons/fa'
 import Loading from '../components/Loading'
 import { useStateContext } from '../context'
@@ -12,11 +12,11 @@ import {
 import SinglePlayerResult from '../components/SinglePlayerResult'
 
 const SinglePlayer = () => {
-  const { state } = useLocation()
-  const { getSentences } = useStateContext()
+  const { getSentences, getTotalNumberOfSentences } = useStateContext()
   const inputRef = useRef()
   const navigate = useNavigate()
 
+  const [, setNumOfSentences, getNumOfSentences] = useState(1)
   const [counter, setCounter] = useState(4)
   const [sentencesArray, setSentencesArray, getSentencesArray] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -193,7 +193,9 @@ const SinglePlayer = () => {
   }
 
   const getSentencesFromSmartContract = async () => {
-    const numArray = getRandomNumbers(1, state.numOfSentences, 3)
+    const num = await getTotalNumberOfSentences()
+    setNumOfSentences(Number(num.num._hex))
+    const numArray = getRandomNumbers(1, getNumOfSentences.current, 3)
 
     const data = await getSentences(true, numArray)
     if (data.success) {
