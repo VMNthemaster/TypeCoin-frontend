@@ -24,7 +24,7 @@ const MultiPlayer = () => {
   const [currentPlayerNumber, setCurrentPlayerNumber] = useState('')
   const [showResult, setShowResult] = useState(false)
 
-  const [carMargin, setCarMargin] = useState({
+  const [carMargin, setCarMargin, getCarMargin] = useState({
     player1: '0%',
     player2: '0%',
     player3: '0%',
@@ -215,11 +215,12 @@ const MultiPlayer = () => {
         setCarMargin((prevMargin) => {
           return {
             ...prevMargin,
-            [`player${currentPlayerNumber}`]: `${Math.floor(
+            [`${currentPlayerNumber}`]: `${Math.floor(
               (timeStamps.currentWordCount * 100) / sentenceData.count
             )}%`,
           }
         })
+        console.log(getCarMargin.current)
         setInputText('')
       } else {
         setInputText(e.target.value)
@@ -319,7 +320,7 @@ const MultiPlayer = () => {
             {/* car 1 */}
             <Car
               wpm={wpm}
-              carMargin={carMargin}
+              carMargin={getCarMargin.current}
               color="orange"
               playerNum="player1"
               username={roomData.usernames['player1']}
