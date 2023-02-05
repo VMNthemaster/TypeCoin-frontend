@@ -16,10 +16,11 @@ const MultiPlayer = () => {
   const inputRef = useRef()
   const { state } = useLocation()
 
+  const [roomData, setRoomData] = useState({})
   const [sentenceData, setSentenceData, getSentenceData] = useState({})
   const [loading, setLoading] = useState(true)
   const [counter, setCounter] = useState(4)
-  const [currentPlayerNumber, setCurrentPlayerNumber, getCurrentPlayerNumber] = useState('')
+  const [currentPlayerNumber, setCurrentPlayerNumber] = useState('')
   const [showResult, setShowResult] = useState(false)
 
   const [carMargin, setCarMargin] = useState({
@@ -76,6 +77,7 @@ const MultiPlayer = () => {
     if (data.success) {
       const parsedData = checkEndingOfSentence(data.data)
       setSentenceData(parsedData[0])
+      setCurrentSentence(getSentenceData.current.sentence)
     } else {
       getSentencesFromSmartContract()
     }
@@ -105,10 +107,8 @@ const MultiPlayer = () => {
     socket.on('set_loading_false', (data) => {
       if (data.roomId === room) {
         // at this point everybody has all data
-        setCurrentSentence(getSentenceData.current.sentence)
-        setTimeout(() => {
-          setLoading(false) // we can set it to false later as well
-        }, 2000)
+        setLoading(false) // we can set it to false later as well
+        setRoomData(data.roomData)
       }
     })
 
@@ -148,6 +148,7 @@ const MultiPlayer = () => {
       const asyncGetSentenceDataFromBackend = async () => {
         const data = await getSentenceDataFromBackend()
         setSentenceData(data)
+        setCurrentSentence(getSentenceData.current.sentence)
         setCurrentPlayerNumber(
           Object.keys(state.roomData.usernames)[
             state.roomData.currentRoomCount - 1
@@ -157,8 +158,9 @@ const MultiPlayer = () => {
       asyncGetSentenceDataFromBackend()
     }
 
+
     if (state.roomData.currentRoomCount === 3) {
-      socket.emit('change_loading_state', { roomId: room })
+      socket.emit('change_loading_state', { roomId: room, roomData: state.roomData })
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -317,6 +319,8 @@ const MultiPlayer = () => {
               carMargin={carMargin}
               color="orange"
               playerNum="player1"
+              username={roomData.usernames['player1']}
+              isCurrentPlayer={currentPlayerNumber === 'player1'}
             />
             <hr className="w-[80%] border-2 border-dashed border-red-400" />
 
@@ -325,6 +329,8 @@ const MultiPlayer = () => {
               carMargin={carMargin}
               color="brown"
               playerNum="player2"
+              username={roomData.usernames['player2']}
+              isCurrentPlayer={currentPlayerNumber === 'player2'}
             />
             <hr className="w-[80%] border-2 border-dashed border-red-400" />
 
@@ -333,6 +339,8 @@ const MultiPlayer = () => {
               carMargin={carMargin}
               color="purple"
               playerNum="player3"
+              username={roomData.usernames['player3']}
+              isCurrentPlayer={currentPlayerNumber === 'player3'}
             />
             <hr className="w-[80%] border-2 border-dashed border-red-400" />
           </div>
