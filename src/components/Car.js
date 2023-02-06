@@ -2,8 +2,6 @@ import React from 'react'
 import { FaCarSide } from 'react-icons/fa'
 
 const Car = ({ wpm, carMargin, color, playerNum, username, isCurrentPlayer }) => {
-    // this is staying 0% only
-    console.log(carMargin)
 
   return (
     <div className="flex justify-between mt-4 items-center">

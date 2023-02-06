@@ -3,7 +3,11 @@ import React, { useEffect, useRef } from 'react'
 import useState from 'react-usestateref'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useStateContext } from '../context'
-import { checkEndingOfSentence, checkIgnoredKey, getRandomNumbers } from '../utils'
+import {
+  checkEndingOfSentence,
+  checkIgnoredKey,
+  getRandomNumbers,
+} from '../utils'
 import axios from 'axios'
 import io from 'socket.io-client'
 import Car from '../components/Car'
@@ -115,24 +119,44 @@ const MultiPlayer = () => {
       }
     })
 
+    socket.on('receive_race_data', (data) => {
+      console.log(data)
+      if (data.roomId !== room) return
+
+      setCarMargin((prevMargin) => {
+        return {
+          ...data.carMargin,
+          [`${currentPlayerNumber}`]: prevMargin[`${currentPlayerNumber}`],
+        }
+      })
+
+      setWpm((prevWpm) => {
+        return {
+          ...data.wpm,
+          [`${currentPlayerNumber}`]: prevWpm[`${currentPlayerNumber}`],
+        }
+      })
+    })
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket])
 
   useEffect(() => {
-    if(currentKeyPressed === 'Backspace'){
+    if (currentKeyPressed === 'Backspace') {
       const slicedText = redColorText.slice(redColorText.length - 1)
-      setRedColorText(prevText => prevText.substring(0, redColorText.length - 1))
-      setCurrentSentence(prevText => slicedText + prevText)
-      return;
+      setRedColorText((prevText) =>
+        prevText.substring(0, redColorText.length - 1)
+      )
+      setCurrentSentence((prevText) => slicedText + prevText)
+      return
     }
 
-    const slicedText = currentSentence.slice(0,1)
-    setRedColorText(prev => prev + slicedText)
+    const slicedText = currentSentence.slice(0, 1)
+    setRedColorText((prev) => prev + slicedText)
     setCurrentSentence(currentSentence.slice(1))
-    
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incorrectTypedText])
-  
 
   useEffect(() => {
     if (state === null) {
@@ -146,7 +170,7 @@ const MultiPlayer = () => {
 
     if (state.roomData.currentRoomCount === 1) {
       getSentencesFromSmartContract()
-      setCurrentPlayerNumber("player1")
+      setCurrentPlayerNumber('player1')
     } else {
       const asyncGetSentenceDataFromBackend = async () => {
         const data = await getSentenceDataFromBackend()
@@ -161,13 +185,23 @@ const MultiPlayer = () => {
       asyncGetSentenceDataFromBackend()
     }
 
-
     if (state.roomData.currentRoomCount === 3) {
-      socket.emit('change_loading_state', { roomId: room, roomData: state.roomData })
+      socket.emit('change_loading_state', {
+        roomId: room,
+        roomData: state.roomData,
+      })
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const sendRaceData = () => {
+    socket.emit('send_race_data', {
+      roomId: room,
+      carMargin,
+      wpm,
+    })
+  }
 
   const calculateWPM = () => {
     const numOfWords = timeStamps.currentWordCount
@@ -175,10 +209,10 @@ const MultiPlayer = () => {
       (timeStamps.currentTime - timeStamps.startTime) / (60 * 1000)
     // 60 to convert it in minutes and 1000 to convert from millseconsds to seconds
     const tempWPM = Math.floor(numOfWords / timePassed)
-    setWpm(prevWPM => {
+    setWpm((prevWPM) => {
       return {
         ...prevWPM,
-        [`${currentPlayerNumber}`]: tempWPM
+        [`${currentPlayerNumber}`]: tempWPM,
       }
     })
   }
@@ -194,7 +228,7 @@ const MultiPlayer = () => {
   // io functions
   const handleChange = (e) => {
     if (counter > 0) return
-    if (timeStamps.currentWordCount === sentenceData.count) return
+    if (timeStamps.currentWordCount === sentenceData.count) return // send socket emit of race finished here
 
     if (currentKeyPressed === ' ') {
       // if space is clicked when it should not have been clicked
@@ -220,8 +254,11 @@ const MultiPlayer = () => {
             )}%`,
           }
         })
-        console.log(getCarMargin.current)
         setInputText('')
+
+        if (timeStamps.currentWordCount % 3 === 0) {
+          sendRaceData()
+        }
       } else {
         setInputText(e.target.value)
       }
@@ -256,19 +293,18 @@ const MultiPlayer = () => {
     // checks if the key pressed is correct or not
     if (currentKeyPressed === currentSentence[0]) {
       // if word is incorrect but the next letter is correct case
-      if(getIncorrectTypedText.current.length>0){
+      if (getIncorrectTypedText.current.length > 0) {
         if (getIncorrectTypedText.current.length > 5) {
           setInputText((prevText) => prevText.substring(0, prevText.length - 1))
         } else {
           setIncorrectTypedText((prevText) => prevText + currentKeyPressed)
         }
 
-        return;
+        return
       }
 
       setTypedText((prevText) => prevText + currentKeyPressed)
       setCurrentSentence((prevText) => prevText.slice(1))
-
     } else {
       // only add it to the incorrect string if already typed incorrect list length is less than 5
       if (incorrectTypedText.length > 5) {
@@ -280,8 +316,7 @@ const MultiPlayer = () => {
 
     // handling last word
     if (
-      timeStamps.currentWordCount ===
-        sentenceData.count - 1 &&
+      timeStamps.currentWordCount === sentenceData.count - 1 &&
       getInputText.current === sentenceData.lastWord
     ) {
       timeStamps.currentWordCount += 1
@@ -292,7 +327,6 @@ const MultiPlayer = () => {
       calculateWPM()
       setShowResult(true)
     }
-
   }
 
   return (
