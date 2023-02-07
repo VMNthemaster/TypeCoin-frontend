@@ -26,7 +26,12 @@ const MultiPlayer = () => {
   const [loading, setLoading] = useState(true)
   const [counter, setCounter] = useState(4)
   const [currentPlayerNumber, setCurrentPlayerNumber] = useState('')
-  const [showResult, setShowResult] = useState(false)
+  const [flag, setFlag] = useState(0)
+  const [rankings, setRankings, getRankings] = useState({
+    player1: '',
+    player2: '',
+    player3: '',
+  })
 
   const [carMargin, setCarMargin, getCarMargin] = useState({
     player1: '0%',
@@ -138,6 +143,28 @@ const MultiPlayer = () => {
       })
     })
 
+    socket.on("receive_race_finish_data", (data) => {
+      if(data.roomId !== room) return;
+
+      setFlag(data.flag)
+      setRankings(data.rankings)
+
+      setCarMargin((prevMargin) => {
+        return {
+          ...data.carMargin,
+          [`${currentPlayerNumber}`]: prevMargin[`${currentPlayerNumber}`],
+        }
+      })
+
+      setWpm((prevWpm) => {
+        return {
+          ...data.wpm,
+          [`${currentPlayerNumber}`]: prevWpm[`${currentPlayerNumber}`],
+        }
+      })
+      
+    })
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket])
 
@@ -200,6 +227,22 @@ const MultiPlayer = () => {
       roomId: room,
       carMargin,
       wpm,
+    })
+  }
+
+  const sendRaceFinishData = () => {
+    setRankings((prevRankings) => {
+      return {
+        ...prevRankings,
+        [`${currentPlayerNumber}`]: flag + 1,
+      }
+    })
+    socket.emit('send_race_finish_data', {
+      roomId: room,
+      rankings: getRankings.current,
+      flag: flag + 1,
+      wpm,
+      carMargin,
     })
   }
 
@@ -325,7 +368,7 @@ const MultiPlayer = () => {
       setInputText('')
       inputRef.current.blur() // removes focus when finished typing
       calculateWPM()
-      setShowResult(true)
+      sendRaceFinishData()
     }
   }
 
@@ -359,6 +402,7 @@ const MultiPlayer = () => {
               playerNum="player1"
               username={roomData.usernames['player1']}
               isCurrentPlayer={currentPlayerNumber === 'player1'}
+              rankings={rankings}
             />
             <hr className="w-[80%] border-2 border-dashed border-red-400" />
 
@@ -369,6 +413,7 @@ const MultiPlayer = () => {
               playerNum="player2"
               username={roomData.usernames['player2']}
               isCurrentPlayer={currentPlayerNumber === 'player2'}
+              rankings={rankings}
             />
             <hr className="w-[80%] border-2 border-dashed border-red-400" />
 
@@ -379,6 +424,7 @@ const MultiPlayer = () => {
               playerNum="player3"
               username={roomData.usernames['player3']}
               isCurrentPlayer={currentPlayerNumber === 'player3'}
+              rankings={rankings}
             />
             <hr className="w-[80%] border-2 border-dashed border-red-400" />
           </div>
