@@ -5,7 +5,8 @@ import {ethers} from 'ethers'
 const StateContext = createContext()
 
 export const StateContextProvider = ({children}) => {
-    const {contract} = useContract('0x3a733129D0869029eee200AD2Ff59E351511BA84')    // contract address
+    const contractAddress = '0x3a733129D0869029eee200AD2Ff59E351511BA84'
+    const {contract} = useContract(contractAddress)    // contract address
 
     const address = useAddress()    // gives the address of the connected wallet
     const connect = useMetamask()
@@ -56,6 +57,21 @@ export const StateContextProvider = ({children}) => {
         }
     }
 
+    const sendWinningAmount = async (_winnerAddress) => {
+        try {
+            const data = await contract.call('sendEthToWinner', _winnerAddress, {value: ethers.utils.parseEther('0.01')})
+              return {
+                success: true,
+                data,
+              }
+        } catch (error) {
+            return {
+                success: false,
+                error,
+              }
+        }
+    }
+
     return (
         <StateContext.Provider value={{
             address,
@@ -64,6 +80,7 @@ export const StateContextProvider = ({children}) => {
             sendParticipationAmount,
             getSentences,
             getTotalNumberOfSentences,
+            sendWinningAmount,
         }}>
             {children}
         </StateContext.Provider>

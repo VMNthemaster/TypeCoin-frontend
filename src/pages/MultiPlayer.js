@@ -15,7 +15,7 @@ const socket = io.connect('http://localhost:5000')
 
 const MultiPlayer = () => {
   let { room } = useParams()
-  const { getSentences, getTotalNumberOfSentences } = useStateContext()
+  const { getSentences, getTotalNumberOfSentences, sendWinningAmount, address } = useStateContext()
   const navigate = useNavigate()
   const inputRef = useRef()
   const { state } = useLocation()
@@ -25,7 +25,7 @@ const MultiPlayer = () => {
   const [sentenceData, setSentenceData, getSentenceData] = useState({})
   const [loading, setLoading] = useState(true)
   const [counter, setCounter] = useState(4)
-  const [currentPlayerNumber, setCurrentPlayerNumber] = useState('')
+  const [currentPlayerNumber, setCurrentPlayerNumber, getCurrentPlayerNumber] = useState('')
   const [flag, setFlag] = useState(0)
   const [rankings, setRankings, getRankings] = useState({
     player1: '',
@@ -102,6 +102,11 @@ const MultiPlayer = () => {
     socket.emit('join_room', { roomId: room })
   }
 
+  const getWinningAmountFromSmartContract = async () => {
+    const data = await sendWinningAmount(address)
+    console.log({data})
+  }
+
   useEffect(() => {
     if (!loading) {
       handleCounter()
@@ -125,7 +130,6 @@ const MultiPlayer = () => {
     })
 
     socket.on('receive_race_data', (data) => {
-      console.log(data)
       if (data.roomId !== room) return
 
       setCarMargin((prevMargin) => {
@@ -162,7 +166,9 @@ const MultiPlayer = () => {
           [`${currentPlayerNumber}`]: prevWpm[`${currentPlayerNumber}`],
         }
       })
-      
+      if(getRankings.current[`${getCurrentPlayerNumber.current}`] === 1){
+        getWinningAmountFromSmartContract()
+      }
     })
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -248,6 +254,7 @@ const MultiPlayer = () => {
 
   const calculateWPM = () => {
     const numOfWords = timeStamps.currentWordCount
+    console.log(numOfWords)
     const timePassed =
       (timeStamps.currentTime - timeStamps.startTime) / (60 * 1000)
     // 60 to convert it in minutes and 1000 to convert from millseconsds to seconds
@@ -367,6 +374,7 @@ const MultiPlayer = () => {
       timeStamps.endTime = timeStamps.currentTime
       setInputText('')
       inputRef.current.blur() // removes focus when finished typing
+      console.log("hi")
       calculateWPM()
       sendRaceFinishData()
     }
