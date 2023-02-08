@@ -38,7 +38,7 @@ const MultiPlayer = () => {
     player2: '0%',
     player3: '0%',
   })
-  const [wpm, setWpm] = useState({
+  const [wpm, setWpm, getWpm] = useState({
     player1: 0,
     player2: 0,
     player3: 0,
@@ -225,8 +225,8 @@ const MultiPlayer = () => {
   const sendRaceData = () => {
     socket.emit('send_race_data', {
       roomId: room,
-      carMargin,
-      wpm,
+      carMargin: getCarMargin.current,
+      wpm: getWpm.current,
     })
   }
 
@@ -271,7 +271,7 @@ const MultiPlayer = () => {
   // io functions
   const handleChange = (e) => {
     if (counter > 0) return
-    if (timeStamps.currentWordCount === sentenceData.count) return // send socket emit of race finished here
+    if (timeStamps.currentWordCount === sentenceData.count) return 
 
     if (currentKeyPressed === ' ') {
       // if space is clicked when it should not have been clicked
@@ -374,7 +374,7 @@ const MultiPlayer = () => {
 
   return (
     <div
-      className={`h-[90vh] bg-gradient-to-b from-gray-100 to-gray-200 w-full flex justify-center items-center`}
+      className={`min-h-[90vh] bg-gradient-to-b from-gray-100 to-gray-200 w-full flex justify-center items-center`}
     >
       {loading && <Loading />}
 
@@ -432,10 +432,14 @@ const MultiPlayer = () => {
           {/* main menu */}
           <div
             onClick={() => navigate('/')}
-            className="flex justify-start cursor-pointer mt-4"
+            className="flex justify-between cursor-pointer mt-4"
           >
-            <button className="bg-yellow-300 rounded-md hover:bg-yellow-400 text-blue-900 px-4 py-2">
+            <button className="bg-yellow-300 rounded-md hover:bg-yellow-400 text-white font-medium px-4 py-2">
               Main Menu
+            </button>
+            <button className="bg-green-500 rounded-md hover:bg-green-600 text-white font-medium px-4 py-2">
+              {/* work on this later */}
+              New Race  
             </button>
           </div>
 

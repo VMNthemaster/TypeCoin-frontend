@@ -2,6 +2,11 @@ import React from 'react'
 import { FaCarSide } from 'react-icons/fa'
 
 const Car = ({ wpm, carMargin, color, playerNum, username, isCurrentPlayer, rankings }) => {
+  const rankingEnum = {
+    1: 'First Place!',
+    2: 'Second Place',
+    3: 'Third Place',
+  }
 
   return (
     <div className="flex justify-between mt-4 items-center">
@@ -12,7 +17,7 @@ const Car = ({ wpm, carMargin, color, playerNum, username, isCurrentPlayer, rank
         </div>
       </div>
       <div className='flex flex-col justify-center items-center'>
-      <h2>{rankings[`${playerNum}`] && rankings[`${playerNum}`]}</h2>
+      <h2>{rankings[`${playerNum}`] && rankingEnum[rankings[playerNum]]}</h2>
       <h2>{wpm[`${playerNum}`]} wpm</h2>
       </div>
     </div>
