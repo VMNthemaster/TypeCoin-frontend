@@ -8,10 +8,10 @@ import { StateContextProvider } from './context'
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(
   <ThirdwebProvider desiredChainId={ChainId.Goerli}>
-    <React.StrictMode>
+    {/* <React.StrictMode> */}
       <StateContextProvider>
         <App />
       </StateContextProvider>
-    </React.StrictMode>
+    {/* </React.StrictMode> */}
   </ThirdwebProvider>
 )

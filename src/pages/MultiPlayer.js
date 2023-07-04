@@ -11,11 +11,13 @@ import {
 import axios from 'axios'
 import io from 'socket.io-client'
 import Car from '../components/Car'
+import MultiPlayerResult from '../components/MultiPlayerResult'
+import MultiPlayerLoser from '../components/MultiPlayerLoser'
 const socket = io.connect('http://localhost:5000')
 
 const MultiPlayer = () => {
   let { room } = useParams()
-  const { getSentences, getTotalNumberOfSentences, sendWinningAmount, address } = useStateContext()
+  const { getSentences, getTotalNumberOfSentences, sendWinningAmount } = useStateContext()
   const navigate = useNavigate()
   const inputRef = useRef()
   const { state } = useLocation()
@@ -27,6 +29,10 @@ const MultiPlayer = () => {
   const [counter, setCounter] = useState(4)
   const [currentPlayerNumber, setCurrentPlayerNumber, getCurrentPlayerNumber] = useState('')
   const [flag, setFlag] = useState(0)
+  const [loserScreen, setLoserScreen] = useState(false)
+  const [winnerScreen, setWinnerScreen] = useState(false)
+  const [alreadyPaid, setAlreadyPaid] = useState(false)
+  const [ethSent, setEthSent] = useState(false)
   const [rankings, setRankings, getRankings] = useState({
     player1: '',
     player2: '',
@@ -43,7 +49,7 @@ const MultiPlayer = () => {
     player2: 0,
     player3: 0,
   })
-  const [timeStamps, setTimeStamps] = useState({
+  const [timeStamps,] = useState({
     startTime: '',
     currentTime: '',
     endTime: '',
@@ -103,8 +109,18 @@ const MultiPlayer = () => {
   }
 
   const getWinningAmountFromSmartContract = async () => {
-    const data = await sendWinningAmount(address)
+    console.log("in fn")  // working correctly go ahead.
+    setWinnerScreen(true)
+    const data = await sendWinningAmount()
+    socket.emit('already_paid', {roomId: room, alreadyPaid: true})
+
+    if(data.success){
+      setAlreadyPaid(true)
+      setEthSent(true)
+    }
     console.log({data})
+
+
   }
 
   useEffect(() => {
@@ -147,6 +163,12 @@ const MultiPlayer = () => {
       })
     })
 
+    socket.on('receive_already_paid', (data) => {
+      if (data.roomId !== room) return
+      setAlreadyPaid(data.alreadyPaid)
+
+    })
+
     socket.on("receive_race_finish_data", (data) => {
       if(data.roomId !== room) return;
 
@@ -167,7 +189,12 @@ const MultiPlayer = () => {
         }
       })
       if(getRankings.current[`${getCurrentPlayerNumber.current}`] === 1){
-        getWinningAmountFromSmartContract()
+        if(!alreadyPaid){
+          getWinningAmountFromSmartContract()
+        }
+      }
+      else if(getRankings.current[`${getCurrentPlayerNumber.current}`] === 2 || getRankings.current[`${getCurrentPlayerNumber.current}`] === 3){
+        setLoserScreen(true)
       }
     })
 
@@ -254,7 +281,7 @@ const MultiPlayer = () => {
 
   const calculateWPM = () => {
     const numOfWords = timeStamps.currentWordCount
-    console.log(numOfWords)
+    console.log(numOfWords, sentenceData.count)
     const timePassed =
       (timeStamps.currentTime - timeStamps.startTime) / (60 * 1000)
     // 60 to convert it in minutes and 1000 to convert from millseconsds to seconds
@@ -374,7 +401,6 @@ const MultiPlayer = () => {
       timeStamps.endTime = timeStamps.currentTime
       setInputText('')
       inputRef.current.blur() // removes focus when finished typing
-      console.log("hi")
       calculateWPM()
       sendRaceFinishData()
     }
@@ -382,10 +408,12 @@ const MultiPlayer = () => {
 
   return (
     <div
-      className={`min-h-[90vh] bg-gradient-to-b from-gray-100 to-gray-200 w-full flex justify-center items-center`}
+      className={`min-h-[90vh] bg-gradient-to-b from-gray-100 to-gray-200 w-full flex flex-col justify-center items-center relative`}
     >
       {loading && <Loading />}
 
+      {winnerScreen && <MultiPlayerResult ethSent={ethSent} setWinnerScreen={setWinnerScreen} />}
+      {loserScreen && <MultiPlayerLoser setLoserScreen={setLoserScreen} />}
       {!loading && (
         <div className="card h-fit w-[40%] p-4 border-2 bg-white shadow-md rounded-md">
           {/* heading */}
@@ -439,13 +467,13 @@ const MultiPlayer = () => {
 
           {/* main menu */}
           <div
-            onClick={() => navigate('/')}
+            
             className="flex justify-between cursor-pointer mt-4"
           >
-            <button className="bg-yellow-300 rounded-md hover:bg-yellow-400 text-white font-medium px-4 py-2">
+            <button onClick={() => navigate('/')} className="bg-yellow-300 rounded-md hover:bg-yellow-400 text-white font-medium px-4 py-2">
               Main Menu
             </button>
-            <button className="bg-green-500 rounded-md hover:bg-green-600 text-white font-medium px-4 py-2">
+            <button onClick={() => navigate('/username')} className="bg-green-500 rounded-md hover:bg-green-600 text-white font-medium px-4 py-2">
               {/* work on this later */}
               New Race  
             </button>
